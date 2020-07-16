@@ -122,7 +122,7 @@ namespace ImageResizer
                 }
 
                 //blob service connection
-                var thumbContainerName = name.Remove(name.Length - 4);
+                var thumbContainerName = name.Replace(".", "");
                 var blobServiceClient = new BlobServiceClient(BLOB_STORAGE_CONNECTION_STRING);
 
                 //checks if image exist in storage

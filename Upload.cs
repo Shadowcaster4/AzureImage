@@ -36,12 +36,13 @@ namespace ImageResizer
                 var containers = blobServiceClient.GetBlobContainers();
                 bool flag = false;
 
-                if (!Regex.IsMatch(imageFromHttp.FileName.Remove(imageFromHttp.FileName.Length - 4), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
+                if (!Regex.IsMatch(imageFromHttp.FileName.Replace(".", ""), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
                     return new OkObjectResult("Invalid file name");
+
 
                 foreach (BlobContainerItem blobContainer in containers)
                 {
-                    if (blobContainer.Name == imageFromHttp.FileName.Remove(imageFromHttp.FileName.Length - 4))
+                    if (blobContainer.Name == imageFromHttp.FileName.Replace(".", ""))
                     {
                         flag = true;
                     }
@@ -50,8 +51,8 @@ namespace ImageResizer
                 {
                     return new BadRequestErrorMessageResult("Sorry but this name is already taken");
                 }
-                blobServiceClient.CreateBlobContainer(imageFromHttp.FileName.Remove(imageFromHttp.FileName.Length - 4), PublicAccessType.Blob);
-                var blobContainterClient = blobServiceClient.GetBlobContainerClient(imageFromHttp.FileName.Remove(imageFromHttp.FileName.Length - 4));
+                blobServiceClient.CreateBlobContainer(imageFromHttp.FileName.Replace(".",""), PublicAccessType.Blob);
+                var blobContainterClient = blobServiceClient.GetBlobContainerClient(imageFromHttp.FileName.Replace(".", ""));
 
 
                 using (var output = new MemoryStream())
