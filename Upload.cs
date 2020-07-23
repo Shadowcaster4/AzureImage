@@ -13,6 +13,11 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Text.RegularExpressions;
 using System.Web.Http;
+using ImageResizer.Services;
+using System.Linq;
+using System.Net.Http;
+using System.Net;
+using ImageResizer.Services.Interfaces;
 
 namespace ImageResizer
 {
@@ -23,59 +28,42 @@ namespace ImageResizer
 
 
         [FunctionName("Upload")]
-        public static async Task<IActionResult> Run(
+        public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Upload")] HttpRequest req,
             ILogger log)
         {
+            var resp = new HttpResponseMessage();
             try
             {
-                log.LogInformation("C# HTTP trigger function processed a upload request.");
+                
                 var imageFromHttp = req.Form.Files.GetFile(req.Form.Files[0].Name);
+                var container = req.Form["container"];
+                       
+                IImageService service = new ImageService(BLOB_STORAGE_CONNECTION_STRING);
 
-                var blobServiceClient = new BlobServiceClient(BLOB_STORAGE_CONNECTION_STRING);
-                var containers = blobServiceClient.GetBlobContainers();
-                bool flag = false;
-
-                if (!Regex.IsMatch(imageFromHttp.FileName.Replace(".", ""), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
-                    return new OkObjectResult("Invalid file name");
-
-
-                foreach (BlobContainerItem blobContainer in containers)
+                if(!service.CheckIfContainerNameIsValid(container))
                 {
-                    if (blobContainer.Name == imageFromHttp.FileName.Replace(".", ""))
-                    {
-                        flag = true;
-                    }
+                    resp.StatusCode = HttpStatusCode.BadRequest;
+                    resp.Content = new StringContent("invalid container name");
+                    return resp;
                 }
-                if (flag)
-                {
-                    return new BadRequestErrorMessageResult("Sorry but this name is already taken");
-                }
-                blobServiceClient.CreateBlobContainer(imageFromHttp.FileName.Replace(".",""), PublicAccessType.Blob);
-                var blobContainterClient = blobServiceClient.GetBlobContainerClient(imageFromHttp.FileName.Replace(".", ""));
 
+                string imagePath = service.GetImagePathUpload(imageFromHttp.FileName);
+                service.UploadImage(imageFromHttp.OpenReadStream(), container, imagePath);
 
-                using (var output = new MemoryStream())
-                {
-                    using (Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromHttp.OpenReadStream()))
-                    {
-                        if (imageFromHttp.FileName.Substring(imageFromHttp.FileName.Length - 3) == "jpg")
-                            image.Save(output, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
-                        if (imageFromHttp.FileName.Substring(imageFromHttp.FileName.Length - 3) == "png")
-                            image.Save(output, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+                resp.StatusCode = HttpStatusCode.Created;
+                resp.Content = new StringContent("Image uploaded successfully");
+                return resp;
 
-                        output.Position = 0;
-                        await blobContainterClient.UploadBlobAsync(imageFromHttp.FileName, output);
-                    }
-                }
             }
             catch (Exception e)
             {
                 log.LogInformation(e.Message);
-                return new BadRequestErrorMessageResult("Something went wrong");
+                resp.StatusCode = HttpStatusCode.InternalServerError;
+                resp.Content = new StringContent("Something went wrong");
+                return resp;
             }
 
-            return new OkObjectResult("Success");
         }
     }
 }
