@@ -17,8 +17,7 @@ namespace ImageResizer
 {
     public static class Remove
     {
-        private static readonly string BLOB_STORAGE_CONNECTION_STRING = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-
+        
         [FunctionName("Remove")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req,
@@ -27,8 +26,14 @@ namespace ImageResizer
             try
             {
                 var resp = new HttpResponseMessage();
-                var service = new ImageService(BLOB_STORAGE_CONNECTION_STRING);
-                service.SetServiceContainer(req.Form["container"]);
+                var service = new ImageService();
+
+                if(!service.SetServiceContainer(req.Form["container"]))
+                {
+                    resp.StatusCode = HttpStatusCode.BadRequest;
+                    resp.Content = new StringContent("Provided container is innvalid");
+                    return resp;
+                }
 
                 switch (req.Form["objectToDelete"])
                 {
@@ -53,8 +58,8 @@ namespace ImageResizer
                         }
                         break;
                     default:
-                        resp.StatusCode = HttpStatusCode.OK; 
-                        resp.Content = new StringContent("Nothing was done");
+                        resp.StatusCode = HttpStatusCode.BadRequest; 
+                        resp.Content = new StringContent("Invalid objectToDelete option");
                         break;
 
                 }

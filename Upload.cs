@@ -23,9 +23,7 @@ namespace ImageResizer
 {
     public static class Upload
     {
-
-        private static readonly string BLOB_STORAGE_CONNECTION_STRING = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-
+             
 
         [FunctionName("Upload")]
         public static async Task<HttpResponseMessage> Run(
@@ -38,8 +36,15 @@ namespace ImageResizer
                 
                 var imageFromHttp = req.Form.Files.GetFile(req.Form.Files[0].Name);
                 var container = req.Form["container"];
-                       
-                IImageService service = new ImageService(BLOB_STORAGE_CONNECTION_STRING);
+                
+                if(imageFromHttp==null || container == string.Empty)
+                {
+                    resp.StatusCode = HttpStatusCode.BadRequest;
+                    resp.Content = new StringContent("invalid request data");
+                    return resp;
+                }
+
+                IImageService service = new ImageService();
 
                 if(!service.CheckIfContainerNameIsValid(container))
                 {
@@ -48,9 +53,15 @@ namespace ImageResizer
                     return resp;
                 }
 
+                if(!service.ChceckIfFileIsSupported(imageFromHttp.FileName))
+                {
+                    resp.StatusCode = HttpStatusCode.BadRequest;
+                    resp.Content = new StringContent("invalid image format");
+                    return resp;
+                }
+
                 string imagePath = service.GetImagePathUpload(imageFromHttp.FileName);
                 service.UploadImage(imageFromHttp.OpenReadStream(), container, imagePath);
-
                 resp.StatusCode = HttpStatusCode.Created;
                 resp.Content = new StringContent("Image uploaded successfully");
                 return resp;

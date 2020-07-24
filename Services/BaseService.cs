@@ -8,6 +8,11 @@ namespace ImageResizer.Services
     {
         protected readonly string _applicationConnectionString;
 
+        public BaseService()
+        {
+            _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        }
+
         public BaseService(string applicationConnectionString)
         {
             _applicationConnectionString = applicationConnectionString;

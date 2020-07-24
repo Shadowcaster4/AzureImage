@@ -29,6 +29,11 @@ namespace ImageResizer.Services
             blobServiceClient = new BlobServiceClient(applicationConnectionString);
         }
 
+        public ImageService() : base()
+        {
+            blobServiceClient = new BlobServiceClient(base._applicationConnectionString);
+        }
+
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
@@ -113,7 +118,6 @@ namespace ImageResizer.Services
             var blobs = blobContainerClient.GetBlobs();
 
             Dictionary<string, long> imagesDictionary = blobs.ToDictionary(b => b.Name, b => b.Properties.ContentLength ?? 0);
-            // Dictionary<string, long> imagesDictionary = blobs.ToDictionary(b => b.Name.Substring(b.Name.LastIndexOf('/')+1), b => b.Properties.ContentLength ??0);
             return imagesDictionary;
         }
 
@@ -128,6 +132,7 @@ namespace ImageResizer.Services
             return imagesDictionary;
         }
 
+        
 
         public bool DeleteCachedImage(string imagePath)
         {

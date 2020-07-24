@@ -29,7 +29,7 @@ namespace ImageResizer
     public static class Resize
     {
         //connection string
-        private static  readonly string BLOB_STORAGE_CONNECTION_STRING = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        
    
         [FunctionName("Resize")]
         public static async Task<HttpResponseMessage> Run(
@@ -42,7 +42,7 @@ namespace ImageResizer
             var resp = new HttpResponseMessage();
             try
             {
-                var service =new ImageService(BLOB_STORAGE_CONNECTION_STRING);
+                var service =new ImageService();
                 
                 var requestedParameters = new QueryParameterValues(parameters);
 
