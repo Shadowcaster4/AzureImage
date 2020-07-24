@@ -6,7 +6,10 @@ using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Azure;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
@@ -147,12 +150,31 @@ namespace ImageResizer.Services
         public bool DeleteImageDirectory(string directoryName)
         {
             var containerObjects = GetImagesFromContainer();
+            bool flag = false;
             foreach (BlobItem blobItem in containerObjects)
             {
-                if (blobItem.Name.Contains("/" + directoryName + "/"))
+                if (blobItem.Name.Contains("/" + directoryName.Replace(".","") + "/"))
+                {
                     blobContainerClient.DeleteBlobIfExists(blobItem.Name);
+                    flag = true;
+                }                   
             }
-            return true;
+            return flag;
+        }
+
+        public bool DeleteLetterDirectory(string fileName)
+        {
+            var containerObjects = GetImagesFromContainer();
+            bool flag = false;
+            foreach (BlobItem blobItem in containerObjects)
+            {
+                if (blobItem.Name.StartsWith(fileName[0] + "/"))
+                {
+                    blobContainerClient.DeleteBlobIfExists(blobItem.Name);
+                    flag = true;
+                }
+            }
+            return flag;
         }
 
         public bool UploadImage(Stream image, string usersContainerName, string imagePath)
@@ -220,7 +242,22 @@ namespace ImageResizer.Services
             return outputStream;
         }
 
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding)
+        public IImageEncoder GetImageEncoder(string fileFormat)
+        {
+            switch (fileFormat)
+            {
+                case "png":
+                    return new PngEncoder();
+                case "jpg":
+                    return new JpegEncoder();
+                case "jpeg":
+                    return new JpegEncoder();
+                default:
+                    return new JpegEncoder();
+            }
+        }
+
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding,string fileFormat)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
             image.Mutate(x => x.Resize(new ResizeOptions
@@ -228,6 +265,8 @@ namespace ImageResizer.Services
                 Mode = ResizeMode.Max,
                 Size = new Size(width, heigth)
             }));
+
+            IImageEncoder imageFormatEncoder = GetImageEncoder(fileFormat);
 
             if (padding)
             {
@@ -239,7 +278,7 @@ namespace ImageResizer.Services
                 image = imageContainer;
             }
             var output = new MemoryStream();
-            image.Save(output, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
+            image.Save(output, imageFormatEncoder);
             return output;
         }
 
@@ -265,9 +304,22 @@ namespace ImageResizer.Services
 
         public bool ChceckIfFileIsSupported(string fileName)
         {
-            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg")))
+            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg")))
                 return false;
             return true;
+        }
+
+        public string GetImageExtension(string fileName)
+        {
+            if (fileName.EndsWith(".png"))
+                return "png";
+            if (fileName.EndsWith(".jpg"))
+                return "jpeg";
+            if (fileName.EndsWith(".jpeg"))
+                return "jpeg";
+
+            return "not-supported";
+            
         }
 
         public bool CheckIfParametersAreInRange(int width, int height)

@@ -19,7 +19,7 @@ namespace ImageResizer
         
         [FunctionName("RemoveOldCache")]
         public static async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "RemoveOldCache/{container}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "RemoveOldCache/{container}")] HttpRequest req,
             string container,
             ILogger log)
         {

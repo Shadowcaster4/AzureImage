@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.Storage.Blobs.Models;
 using ImageResizer.Models;
+using SixLabors.ImageSharp.Formats;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,14 +20,17 @@ namespace ImageResizer.Services.Interfaces
         bool DeleteCachedImage(string imagePath);
         bool DeleteClientContainer(string clientContainerName);
         bool DeleteImageDirectory(string directoryName);
+        public bool DeleteLetterDirectory(string fileName);
         MemoryStream DownloadImageFromStorageToStream(string imagePath);
         Pageable<BlobContainerItem> GetBlobContainers();
         string GetImagePathResize(string parameters, string fileName);
         string GetImagePathUpload(string fileName);
+        public string GetImageExtension(string fileName);
+        public IImageEncoder GetImageEncoder(string fileFormat);
         Dictionary<string, DateTimeOffset> GetImagesDictionaryDate();
         Dictionary<string, long> GetImagesDictionarySize();
         Pageable<BlobItem> GetImagesFromContainer();
-        MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding);
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat);
         bool SaveImage(MemoryStream imageToSave, string imagePath);
         bool SetImageObject(string imagePath);
         bool SetServiceContainer(string containerName);

@@ -22,7 +22,7 @@ namespace ImageResizer
        
         [FunctionName("GetClientContainerSize")]
         public static async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "GetClientContainerSize/{container}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetClientContainerSize/{container}")] HttpRequest req,
             string container,
             ILogger log)
         {

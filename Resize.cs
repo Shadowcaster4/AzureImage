@@ -28,8 +28,7 @@ namespace ImageResizer
 
     public static class Resize
     {
-        //connection string
-        
+               
    
         [FunctionName("Resize")]
         public static async Task<HttpResponseMessage> Run(
@@ -44,6 +43,7 @@ namespace ImageResizer
             {
                 var service =new ImageService();
                 
+
                 var requestedParameters = new QueryParameterValues(parameters);
 
 
@@ -66,8 +66,9 @@ namespace ImageResizer
                     throw new Exception("Problem with container invalid name/doesnt exists");
 
                 var imagePath = service.GetImagePathResize(parameters, image);
+                var imageExtension = service.GetImageExtension(image);
 
-                if(service.CheckIfImageExists(imagePath))
+                if (service.CheckIfImageExists(imagePath))
                 {
                     var tmpImg = service.DownloadImageFromStorageToStream(imagePath);
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -76,14 +77,14 @@ namespace ImageResizer
                     {
                         FileName = image
                     };
-                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/"+imageExtension);
                     return response;
                 }
 
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image)))
                 {
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
-                    var mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding);
+                    var mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding,imageExtension);
                     service.SaveImage(mutadedImage, imagePath);
 
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -92,7 +93,7 @@ namespace ImageResizer
                     {
                         FileName = image
                     };
-                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
                     return response;
 
                 }
