@@ -1,30 +1,19 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using ImageResizer.Services;
+using ImageResizer.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using System.Text.RegularExpressions;
-using System.Web.Http;
-using ImageResizer.Services;
-using System.Linq;
-using System.Net.Http;
+using System;
 using System.Net;
-using ImageResizer.Services.Interfaces;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace ImageResizer
 {
     public static class Upload
     {
              
-
         [FunctionName("Upload")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Upload")] HttpRequest req,

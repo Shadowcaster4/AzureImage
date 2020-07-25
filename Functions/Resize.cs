@@ -1,27 +1,14 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using ImageResizer.Entities;
+using ImageResizer.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.Fonts;
-using Azure.Storage.Blobs.Models;
-using System.Web.Http;
-using System.Net.Http;
+using System;
 using System.Net;
-using System.Reflection.Metadata;
-using ImageResizer.Services;
-using ImageResizer.Models;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace ImageResizer
 {

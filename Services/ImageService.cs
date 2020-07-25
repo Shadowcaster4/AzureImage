@@ -1,12 +1,9 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using ImageResizer.Models;
+using ImageResizer.Entities;
 using ImageResizer.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Azure;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
@@ -16,8 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ImageResizer.Services
@@ -122,20 +117,7 @@ namespace ImageResizer.Services
 
             Dictionary<string, long> imagesDictionary = blobs.ToDictionary(b => b.Name, b => b.Properties.ContentLength ?? 0);
             return imagesDictionary;
-        }
-
-        public Dictionary<string, DateTimeOffset> GetImagesDictionaryDate()
-        {
-            if (!blobContainerClient.Exists())
-                throw new Exception("Blob container is not set");
-            var blobs = blobContainerClient.GetBlobs();
-
-            Dictionary<string, DateTimeOffset> imagesDictionary = blobs.ToDictionary(b => b.Name, b => b.Properties.CreatedOn ?? new DateTimeOffset(DateTime.UtcNow.AddDays(2)));
-            // Dictionary<string, long> imagesDictionary = blobs.ToDictionary(b => b.Name.Substring(b.Name.LastIndexOf('/')+1), b => b.Properties.ContentLength ??0);
-            return imagesDictionary;
-        }
-
-        
+        }        
 
         public bool DeleteCachedImage(string imagePath)
         {

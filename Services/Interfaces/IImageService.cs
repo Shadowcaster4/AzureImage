@@ -1,11 +1,10 @@
 ﻿using Azure;
 using Azure.Storage.Blobs.Models;
-using ImageResizer.Models;
+using ImageResizer.Entities;
 using SixLabors.ImageSharp.Formats;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace ImageResizer.Services.Interfaces
 {
@@ -20,24 +19,23 @@ namespace ImageResizer.Services.Interfaces
         bool DeleteCachedImage(string imagePath);
         bool DeleteClientContainer(string clientContainerName);
         bool DeleteImageDirectory(string directoryName);
-        public bool DeleteLetterDirectory(string fileName);
+        bool DeleteLetterDirectory(string fileName);
         MemoryStream DownloadImageFromStorageToStream(string imagePath);
         Pageable<BlobContainerItem> GetBlobContainers();
         string GetImagePathResize(string parameters, string fileName);
         string GetImagePathUpload(string fileName);
-        public string GetImageExtension(string fileName);
-        public IImageEncoder GetImageEncoder(string fileFormat);
-        Dictionary<string, DateTimeOffset> GetImagesDictionaryDate();
+        string GetImageExtension(string fileName);
+        IImageEncoder GetImageEncoder(string fileFormat);
         Dictionary<string, long> GetImagesDictionarySize();
+        Dictionary<string, CloudFileInfo> GetBaseImagesDictionary();
+        Dictionary<string, DateTimeOffset> GetCachedImagesDictionary();
         Pageable<BlobItem> GetImagesFromContainer();
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat);
+        MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat);
         bool SaveImage(MemoryStream imageToSave, string imagePath);
         bool SetImageObject(string imagePath);
         bool SetServiceContainer(string containerName);
         bool UploadImage(Stream image, string usersContainerName, string imagePath);
-
-        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary();
-        public Dictionary<string, DateTimeOffset> GetCachedImagesDictionary();
+        
 
     }
 }
