@@ -34,9 +34,9 @@ namespace ImageResizer
                     return resp;
                 }
                
-                var x = service.GetBaseImagesDictionary();
+                var cloudImages = service.GetBaseImagesDictionary();
                 resp.StatusCode = HttpStatusCode.OK;
-                resp.Content =new StringContent(JsonConvert.SerializeObject(value: x));
+                resp.Content =new StringContent(JsonConvert.SerializeObject(value: cloudImages));
                 resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 return resp;
             }

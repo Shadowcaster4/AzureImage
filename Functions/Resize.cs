@@ -1,5 +1,6 @@
 using ImageResizer.Entities;
 using ImageResizer.Services;
+using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -14,8 +15,7 @@ namespace ImageResizer
 {
 
     public static class Resize
-    {
-               
+    {               
    
         [FunctionName("Resize")]
         public static async Task<HttpResponseMessage> Run(
@@ -28,8 +28,7 @@ namespace ImageResizer
             var resp = new HttpResponseMessage();
             try
             {
-                var service =new ImageService();
-                
+                IImageService service =new ImageService();                
 
                 var requestedParameters = new QueryParameterValues(parameters);
 
