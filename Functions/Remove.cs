@@ -1,3 +1,4 @@
+using ImageResizer.Entities;
 using ImageResizer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
@@ -22,8 +23,9 @@ namespace ImageResizer
             {
                 var resp = new HttpResponseMessage();
                 var service = new ImageService();
+                resp.StatusCode = HttpStatusCode.Forbidden;
 
-                if(!service.SetServiceContainer(req.Form["container"]))
+                if (!service.SetServiceContainer(req.Form["container"]))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
                     resp.Content = new StringContent("Provided container is innvalid");
@@ -33,7 +35,9 @@ namespace ImageResizer
                 switch (req.Form["objectToDelete"])
                 {
                     case "container":
-                        if(service.CheckIfContainerExists(req.Form["container"]))
+                        if (service.CheckIfContainerExists(req.Form["container"]) && 
+                            service.GetImageSecurityHash(req.Form["container"], "SomeApplicationKeyForHashingContainers")==
+                            req.Form["secKey"])
                         {
                             service.DeleteClientContainer(req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
@@ -47,6 +51,9 @@ namespace ImageResizer
                         break;
 
                     case "imageDirectory":
+                        if(service.GetImageSecurityHash(req.Form["container"],req.Form["imageName"]) != req.Form["secKey"])
+                            break;
+                       
                         if(service.DeleteImageDirectory(req.Form["imageName"]))
                         {
                         resp.StatusCode = HttpStatusCode.OK;
@@ -59,7 +66,15 @@ namespace ImageResizer
                         }
                         break;
                     case "singleImage":
-                        if (service.DeleteCachedImage(service.GetImagePathResize(req.Form["imageParameters"], req.Form["imageName"])))
+                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
+                            break;
+
+                        var requestedParameters = new QueryParameterValues(req.Form["imageParameters"]);
+
+                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]).Substring(0, 4) != requestedParameters.WatermarkString)
+                            requestedParameters.SetWatermarkPresence(false);
+
+                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"])))
                         {
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested image is gone");
@@ -71,6 +86,8 @@ namespace ImageResizer
                         }
                         break;
                     case "letterDirectory":
+                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
+                            break;
                         if (service.DeleteLetterDirectory(req.Form["imageName"]))
                         {
                             resp.StatusCode = HttpStatusCode.OK;

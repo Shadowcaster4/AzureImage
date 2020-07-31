@@ -23,10 +23,12 @@ namespace ImageResizer
             try
             {
                 
-                var imageFromHttp = req.Form.Files.GetFile(req.Form.Files[0].Name);
-                var container = req.Form["container"];
+              //var imageFromHttp = req.Form.Files.GetFile(req.Form.Files[0].Name).l;
+               var container = req.Form["container"];
                 
-                if(imageFromHttp==null || container == string.Empty)
+
+
+                if(req.Form.Files.Count==0 || container == string.Empty)
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
                     resp.Content = new StringContent("invalid request data");
@@ -42,17 +44,35 @@ namespace ImageResizer
                     return resp;
                 }
 
-                if(!service.ChceckIfFileIsSupported(imageFromHttp.FileName))
+
+
+                for(int i=0;i<req.Form.Files.Count;i++)
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("invalid image format");
-                    return resp;
+                    if (!service.ChceckIfFileIsSupported(req.Form.Files[i].FileName))
+                    {
+                        resp.StatusCode = HttpStatusCode.BadRequest;
+                        resp.Content = new StringContent("invalid image format");
+                        return resp;
+                    }
+
+                    if (service.GetUploadImageSecurityKey(container, req.Form.Files[i].FileName, req.Form.Files[i].Length.ToString()) != req.Form.Files[i].Name)
+                    {
+                        resp.StatusCode = HttpStatusCode.Forbidden;
+                        return resp;
+                    }
+                    
+                }
+                               
+
+                for (int i = 0; i < req.Form.Files.Count; i++)
+                {
+                    string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
+                    service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath);
                 }
 
-                string imagePath = service.GetImagePathUpload(imageFromHttp.FileName);
-                service.UploadImage(imageFromHttp.OpenReadStream(), container, imagePath);
+                
                 resp.StatusCode = HttpStatusCode.Created;
-                resp.Content = new StringContent("Image uploaded successfully");
+                resp.Content = new StringContent("Uploaded successfully");
                 return resp;
 
             }

@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -51,7 +52,15 @@ namespace ImageResizer
                 if (!service.SetServiceContainer(clientHash))
                     throw new Exception("Problem with container invalid name/doesnt exists");
 
-                var imagePath = service.GetImagePathResize(parameters, image);
+
+                //checks if watermark image exist if not watermark presence parameter is set to false
+                if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png")))
+                    requestedParameters.SetWatermarkPresence(false);
+                //checks if hash from parameter is valid for requested picture
+                else if (service.GetImageSecurityHash(clientHash, image).Substring(0, 4) == requestedParameters.WatermarkString)
+                    requestedParameters.SetWatermarkPresence(false);
+
+                var imagePath = service.GetImagePathResize(requestedParameters, image);
                 var imageExtension = service.GetImageExtension(image);
 
                 if (service.CheckIfImageExists(imagePath))
@@ -64,13 +73,22 @@ namespace ImageResizer
                         FileName = image
                     };
                     response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/"+imageExtension);
+                    response.Headers.CacheControl = new CacheControlHeaderValue()
+                    {
+                        Public = true,
+                        MaxAge = new TimeSpan(14, 0, 0, 0)
+                    };
                     return response;
                 }
 
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image)))
                 {
+                    
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
-                    var mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding,imageExtension);
+                    var mutadedImage = new MemoryStream();
+
+                    
+                    mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding,imageExtension,requestedParameters.WatermarkPresence);
                     service.SaveImage(mutadedImage, imagePath);
 
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -80,6 +98,11 @@ namespace ImageResizer
                         FileName = image
                     };
                     response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
+                    response.Headers.CacheControl = new CacheControlHeaderValue()
+                    {
+                        Public = true,
+                        MaxAge = new TimeSpan(14, 0, 0, 0)
+                    };
                     return response;
 
                 }

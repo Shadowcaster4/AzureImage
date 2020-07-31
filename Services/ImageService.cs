@@ -13,6 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ImageResizer.Services
@@ -93,7 +95,7 @@ namespace ImageResizer.Services
                 blobBaseClient = blobContainerClient.GetBlobBaseClient(imagePath);
                 return true;
             }
-            return false;
+            return false;         
         }
         public Azure.Pageable<BlobItem> GetImagesFromContainer()
         {
@@ -171,10 +173,12 @@ namespace ImageResizer.Services
             return true;
         }
 
-        public string GetImagePathResize(string parameters, string fileName)
-        {
-            var fileParameters = new QueryParameterValues(parameters);
-            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + fileParameters.Width + "-" + fileParameters.Height + "-" + fileParameters.Padding + "/" + fileName;
+        public string GetImagePathResize(QueryParameterValues parameters, string fileName)
+        {            
+            if(parameters.WatermarkPresence)
+            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "/" + fileName;
+
+            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "/" + fileName;
         }
 
         public string GetImagePathUpload(string fileName)
@@ -239,9 +243,32 @@ namespace ImageResizer.Services
             }
         }
 
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding,string fileFormat)
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding,string fileFormat,bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
+
+            if(fileFormat=="png")
+            {
+                var whiteBackgroundForPngImage = new Image<Rgba32>(image.Width, image.Height, Color.FromRgb(255, 255, 255));
+                whiteBackgroundForPngImage.Mutate(x => x.DrawImage(image, new Point(0, 0), 1.0f));
+                image = whiteBackgroundForPngImage;
+                
+            }
+
+            if(watermark)
+            {
+                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));
+                Image<Rgba32> watermarkImage = (Image<Rgba32>)Image.Load(watermarkStream.ToArray());
+                watermarkImage.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(image.Width/10, image.Height/10)
+                }));
+
+                image.Mutate(x => x.DrawImage(watermarkImage, new Point(image.Width-image.Width/10 , image.Height - image.Height / 10), 0.7f));
+
+            }
+
             image.Mutate(x => x.Resize(new ResizeOptions
             {
                 Mode = ResizeMode.Max,
@@ -276,7 +303,7 @@ namespace ImageResizer.Services
 
         #endregion
 
-        #region Validation Methods
+        #region Validation Methods /Utilities
         public bool CheckIfContainerNameIsValid(string containerName)
         {
             if (!Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
@@ -308,7 +335,29 @@ namespace ImageResizer.Services
         {
             return (width > 2000 || width < 10 || height > 2000 || height < 10 ? true : false);
         }
+        public string HashMyString(string stringToHash)
+        {
+            var data = Encoding.ASCII.GetBytes(stringToHash);
+            var hashData = new SHA1Managed().ComputeHash(data);
+            var myHash = string.Empty;
+            foreach (var b in hashData)
+            {
+                myHash += b.ToString("X2");
+            }
+            return myHash;
+        }
 
+        public string GetImageSecurityHash(string container, string imageName)
+        {
+            return HashMyString(HashMyString(container + imageName));
+        }
+
+        public string GetUploadImageSecurityKey(string container, string imageName,string imageSize)
+        {
+            return HashMyString(container + imageName + imageSize);
+        }
+
+        
 
         #endregion
 

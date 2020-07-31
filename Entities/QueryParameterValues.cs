@@ -9,14 +9,69 @@ namespace ImageResizer.Entities
         public int Width { get ;private set; }
         public int Height { get ;private set; }
         public bool Padding { get ;private set; }
+        public string WatermarkString { get ;private set; }
+
+        public bool CorrectParameterString { get; private set; }
+        public bool WatermarkPresence { get; private set; }
+
+        private string [] Parameters { get; set; }
 
         public QueryParameterValues(string queryParameter)
         {
-            int x = queryParameter.IndexOf(',');
-            int y = queryParameter.LastIndexOf(',');
-            Width = Int32.Parse(queryParameter.Substring(0, x));
-            Height = Int32.Parse(queryParameter.Substring(x + 1, y - x - 1));
-            Padding = Boolean.Parse(queryParameter.Substring(y + 1));
+            Parameters = queryParameter.Split(',');
+            CorrectParameterString = true;
+            WatermarkPresence = true;
+
+            switch (Parameters.Length)
+            {
+                case 0:  case 1: default:
+                    Width = 0;
+                    Height = 0;
+                    Padding = false;
+                    WatermarkString = "";
+                    CorrectParameterString = false;
+                    break;
+
+                case 2:
+                    Width = Int32.Parse(Parameters[0]);
+                    Height = Int32.Parse(Parameters[1]);
+                    break;
+
+                case 3:
+                    Width = Int32.Parse(Parameters[0]);
+                    Height = Int32.Parse(Parameters[1]);
+
+                    if (Parameters[2].Length>1)
+                    {
+                        Padding = false;
+                        WatermarkString = Parameters[2];
+                    }
+
+                    if (Parameters[2].Length == 1 && Parameters[2] == "1")
+                    {
+                        Padding = true;
+                        WatermarkString = "";
+                    }          
+                    break;
+
+                case 4:
+                    Width = Int32.Parse(Parameters[0]);
+                    Height = Int32.Parse(Parameters[1]);
+                    WatermarkString = Parameters[3];
+                    Padding = false;
+                    if (Parameters[2].Length == 1 && Parameters[2] == "1")
+                        Padding = true; 
+                    break;
+                                    
+            }
+
+            
+          
+        }
+
+        public void SetWatermarkPresence(bool presence)
+        {
+            WatermarkPresence = presence;
         }
     }
 }
