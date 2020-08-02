@@ -6,6 +6,8 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Data;
+using System.Data.SQLite;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -27,6 +29,7 @@ namespace ImageResizer
             ILogger log)
         {
             var resp = new HttpResponseMessage();
+            bool flagIsInOryginalImageRange = false;
             try
             {
                 IImageService service =new ImageService();                
@@ -34,6 +37,7 @@ namespace ImageResizer
                 var requestedParameters = new QueryParameterValues(parameters);
 
 
+                
                 //returns BadREquestMessage if width/heightare out of range
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))
                 {
@@ -52,6 +56,12 @@ namespace ImageResizer
                 if (!service.SetServiceContainer(clientHash))
                     throw new Exception("Problem with container invalid name/doesnt exists");
 
+                if (!service.CheckIfImageExists(service.GetImagePathUpload(image)))
+                {
+                    resp.StatusCode = HttpStatusCode.NotFound;
+                    resp.Content = new StringContent("Requested image doesnt exists");
+                    return resp;
+                }
 
                 //checks if watermark image exist if not watermark presence parameter is set to false
                 if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png")))
@@ -60,8 +70,47 @@ namespace ImageResizer
                 else if (service.GetImageSecurityHash(clientHash, image).Substring(0, 4) == requestedParameters.WatermarkString)
                     requestedParameters.SetWatermarkPresence(false);
 
-                var imagePath = service.GetImagePathResize(requestedParameters, image);
+                //sets image extension variable
                 var imageExtension = service.GetImageExtension(image);
+
+                //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
+
+                using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
+                {
+                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, dbConnection);
+                }
+                             
+
+                //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
+                if (!(flagIsInOryginalImageRange))
+                {
+                    if(!requestedParameters.WatermarkPresence)
+                    {
+                        var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
+                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+                        response.Content = new ByteArrayContent(tmpImg.GetBuffer());
+                        response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
+                        {
+                            FileName = image
+                        };
+                        response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
+                        response.Headers.CacheControl = new CacheControlHeaderValue()
+                        {
+                            Public = true,
+                            MaxAge = new TimeSpan(14, 0, 0, 0)
+                        };
+                        return response;
+                    }
+
+                    resp.StatusCode = HttpStatusCode.BadRequest;
+                    resp.Content = new StringContent("invalid resolution");
+                    return resp;
+
+                }
+
+               
+                var imagePath = service.GetImagePathResize(requestedParameters, image);
+              
 
                 if (service.CheckIfImageExists(imagePath))
                 {
@@ -106,8 +155,10 @@ namespace ImageResizer
                     return response;
 
                 }
-                
-                
+
+                resp.StatusCode = HttpStatusCode.NotFound;
+                return resp;
+
             }
             catch (Exception e)
             {
@@ -118,9 +169,7 @@ namespace ImageResizer
                
             }
 
-            resp.StatusCode = HttpStatusCode.NotFound;
-            resp.Content = new StringContent("Requested image doesnt exists");
-            return resp;
+            
             
             
         }

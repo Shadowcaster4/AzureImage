@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
+using Dapper;
 using ImageResizer.Entities;
 using ImageResizer.Services.Interfaces;
 using SixLabors.ImageSharp;
@@ -11,6 +12,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -161,16 +163,39 @@ namespace ImageResizer.Services
             return flag;
         }
 
-        public bool UploadImage(Stream image, string usersContainerName, string imagePath)
+        public bool UploadImage(Stream image, string userContainerName, string imagePath,IDbConnection dbConnection)
         {
-            if (!SetServiceContainer(usersContainerName))
+            if (!SetServiceContainer(userContainerName))
             {
-                CreateUsersContainer(usersContainerName);
-                SetServiceContainer(usersContainerName);
+                CreateUsersContainer(userContainerName);
+                SetServiceContainer(userContainerName);
             }
+                       
+
+            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(image);
+            ImageData imageData = new ImageData()
+            {
+                ContainerName = userContainerName,
+                ImageName = imagePath.Substring(imagePath.LastIndexOf('/')+1),
+                Width = imageObjCreatedForGettingImageData.Width,
+                Height = imageObjCreatedForGettingImageData.Height,
+                Size = image.Length.ToString()
+            };
+
             image.Position = 0;
             blobContainerClient.UploadBlob(imagePath, image);
+
+            dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
+           
+            imageObjCreatedForGettingImageData.Dispose();
+            image.Dispose();
             return true;
+        }
+
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName,string imageName, int width, int height, IDbConnection dbConnection)
+        {
+            ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
+            return width > imageData.Width && height > imageData.Height ? false : true;
         }
 
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)

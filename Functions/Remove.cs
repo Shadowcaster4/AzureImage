@@ -1,10 +1,14 @@
+using Dapper;
 using ImageResizer.Entities;
 using ImageResizer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Data;
+using System.Data.SQLite;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -24,6 +28,8 @@ namespace ImageResizer
                 var resp = new HttpResponseMessage();
                 var service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
+                IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+
 
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
@@ -42,6 +48,7 @@ namespace ImageResizer
                             service.DeleteClientContainer(req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");
+                            dbConnection.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
                         }
                         else
                         {                            
@@ -58,6 +65,7 @@ namespace ImageResizer
                         {
                         resp.StatusCode = HttpStatusCode.OK;
                         resp.Content = new StringContent("Requested directory is gone");
+                        dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
                         }
                         else
                         {
