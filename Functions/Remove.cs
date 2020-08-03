@@ -42,7 +42,7 @@ namespace ImageResizer
                 {
                     case "container":
                         if (service.CheckIfContainerExists(req.Form["container"]) && 
-                            service.GetImageSecurityHash(req.Form["container"], "SomeApplicationKeyForHashingContainers")==
+                            service.GetImageSecurityHash(req.Form["container"], Environment.GetEnvironmentVariable("ContainerRemoveKey")) ==
                             req.Form["secKey"])
                         {
                             service.DeleteClientContainer(req.Form["container"]);
@@ -79,7 +79,7 @@ namespace ImageResizer
 
                         var requestedParameters = new QueryParameterValues(req.Form["imageParameters"]);
 
-                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]).Substring(0, 4) != requestedParameters.WatermarkString)
+                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]).Substring(0, 4) == requestedParameters.WatermarkString)
                             requestedParameters.SetWatermarkPresence(false);
 
                         if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"])))

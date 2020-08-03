@@ -7,7 +7,6 @@ namespace ImageResizer.Entities
     public class ImageData
     {
         public int Id { get; set; }
-        public string ContainerName { get; set; }
         public string ImageName { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }

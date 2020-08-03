@@ -72,6 +72,7 @@ namespace ImageResizer
 
                 //sets image extension variable
                 var imageExtension = service.GetImageExtension(image);
+                var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
 
@@ -101,15 +102,15 @@ namespace ImageResizer
                         };
                         return response;
                     }
-
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("invalid resolution");
-                    return resp;
+                    string newParametersValues = "0,0";
+                    var oversizeImageParameters = new QueryParameterValues(newParametersValues);
+                    requestedParameters = oversizeImageParameters;
+                    imagePath = service.GetImagePathResize(requestedParameters, image);                   
 
                 }
 
                
-                var imagePath = service.GetImagePathResize(requestedParameters, image);
+                
               
 
                 if (service.CheckIfImageExists(imagePath))

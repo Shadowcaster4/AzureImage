@@ -6,6 +6,7 @@ using ImageResizer.Entities;
 using ImageResizer.Services.Interfaces;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -170,12 +171,13 @@ namespace ImageResizer.Services
                 CreateUsersContainer(userContainerName);
                 SetServiceContainer(userContainerName);
             }
-                       
 
+            if (CheckIfImageExists(imagePath))
+                return false;
+                        
             Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(image);
             ImageData imageData = new ImageData()
             {
-                ContainerName = userContainerName,
                 ImageName = imagePath.Substring(imagePath.LastIndexOf('/')+1),
                 Width = imageObjCreatedForGettingImageData.Width,
                 Height = imageObjCreatedForGettingImageData.Height,
@@ -263,42 +265,64 @@ namespace ImageResizer.Services
                     return new JpegEncoder();
                 case "jpeg":
                     return new JpegEncoder();
+                case "gif":
+                    return new GifEncoder();
                 default:
                     return new JpegEncoder();
             }
         }
 
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding,string fileFormat,bool watermark)
+        public IImageDecoder GetImageDecoder(string fileFormat)
+        {
+            switch (fileFormat)
+            {
+                case "png":
+                    return new PngDecoder();
+                case "jpg":
+                    return new JpegDecoder();
+                case "jpeg":
+                    return new JpegDecoder();
+                case "gif":
+                    return new GifDecoder();
+                default:
+                    return new JpegDecoder();
+            }
+        }
+
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat, bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
 
-            if(fileFormat=="png")
+            if (fileFormat == "png")
             {
                 var whiteBackgroundForPngImage = new Image<Rgba32>(image.Width, image.Height, Color.FromRgb(255, 255, 255));
                 whiteBackgroundForPngImage.Mutate(x => x.DrawImage(image, new Point(0, 0), 1.0f));
                 image = whiteBackgroundForPngImage;
-                
+
             }
 
-            if(watermark)
+            if (watermark)
             {
                 MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));
                 Image<Rgba32> watermarkImage = (Image<Rgba32>)Image.Load(watermarkStream.ToArray());
                 watermarkImage.Mutate(x => x.Resize(new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(image.Width/10, image.Height/10)
+                    Size = new Size(image.Width / 10, image.Height / 10)
                 }));
 
-                image.Mutate(x => x.DrawImage(watermarkImage, new Point(image.Width-image.Width/10 , image.Height - image.Height / 10), 0.7f));
+                image.Mutate(x => x.DrawImage(watermarkImage, new Point(image.Width - image.Width / 10, image.Height - image.Height / 10), 0.7f));
 
             }
 
-            image.Mutate(x => x.Resize(new ResizeOptions
+            if (width > 0 && heigth > 0)
             {
-                Mode = ResizeMode.Max,
-                Size = new Size(width, heigth)
-            }));
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(width, heigth)
+                }));
+            }
 
             IImageEncoder imageFormatEncoder = GetImageEncoder(fileFormat);
 
@@ -338,7 +362,7 @@ namespace ImageResizer.Services
 
         public bool ChceckIfFileIsSupported(string fileName)
         {
-            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg")))
+            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif")))
                 return false;
             return true;
         }
@@ -351,6 +375,8 @@ namespace ImageResizer.Services
                 return "jpeg";
             if (fileName.EndsWith(".jpeg"))
                 return "jpeg";
+            if (fileName.EndsWith(".gif"))
+                return "gif";
 
             return "not-supported";
             
