@@ -31,7 +31,6 @@ namespace ImageResizer
 
                 if (!service.SetServiceContainer(container))
                 {
-                    //var emptyCloudImages = new Dictionary<string, CloudFileInfo>();
                     resp.StatusCode = HttpStatusCode.BadRequest;
                     resp.Content = new StringContent("");
                     resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");

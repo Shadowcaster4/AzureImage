@@ -30,15 +30,12 @@ namespace ImageResizer
         {
             var resp = new HttpResponseMessage();
             bool flagIsInOryginalImageRange = false;
+
             try
             {
-                IImageService service =new ImageService();                
-
+                IImageService service =new ImageService();
                 var requestedParameters = new QueryParameterValues(parameters);
-
-
                 
-                //returns BadREquestMessage if width/heightare out of range
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
@@ -75,12 +72,10 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-
                 using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
                 {
                     flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, dbConnection);
-                }
-                             
+                }                             
 
                 //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
                 if (!(flagIsInOryginalImageRange))
@@ -107,11 +102,7 @@ namespace ImageResizer
                     requestedParameters = oversizeImageParameters;
                     imagePath = service.GetImagePathResize(requestedParameters, image);                   
 
-                }
-
-               
-                
-              
+                }              
 
                 if (service.CheckIfImageExists(imagePath))
                 {
@@ -132,11 +123,9 @@ namespace ImageResizer
                 }
 
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image)))
-                {
-                    
+                {                    
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
                     var mutadedImage = new MemoryStream();
-
                     
                     mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding,imageExtension,requestedParameters.WatermarkPresence);
                     service.SaveImage(mutadedImage, imagePath);
@@ -169,9 +158,6 @@ namespace ImageResizer
                 return resp;
                
             }
-
-            
-            
             
         }
     }

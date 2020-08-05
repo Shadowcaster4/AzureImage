@@ -10,16 +10,16 @@ namespace ImageResizer.Services
 
         public BaseService()
         {
-           // _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-            _applicationConnectionString = "UseDevelopmentStorage=true";
-          //  _databaseConnectionString = @"Data Source=.\ImageResizerDB.db;Version=3;";
-
+            if(Environment.GetEnvironmentVariable("LocalStorageFlag")=="true")
+            _applicationConnectionString = Environment.GetEnvironmentVariable("LocalStorageConnectionString");
+            else
+            _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
         }
 
         public BaseService(string applicationConnectionString)
         {
             _applicationConnectionString = applicationConnectionString;
-           // _databaseConnectionString = databaseConnectionString;
+           
         }
     }
 }

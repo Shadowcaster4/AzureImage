@@ -23,12 +23,13 @@ namespace ImageResizer
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req,
             ILogger log)
         {
+            IDbConnection dbConnection=null;
             try
             {
                 var resp = new HttpResponseMessage();
                 var service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
-                IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+                dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
                 
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
@@ -39,10 +40,10 @@ namespace ImageResizer
 
                 switch (req.Form["objectToDelete"])
                 {
-                    case "container":  
-                        if (service.CheckIfContainerExists(req.Form["container"]) && 
-                            service.GetImageSecurityHash(req.Form["container"], Environment.GetEnvironmentVariable("ContainerRemoveKey")) ==
-                            req.Form["secKey"])
+                    case "container":
+                        if (service.GetImageSecurityHash(req.Form["container"], Environment.GetEnvironmentVariable("ContainerRemoveKey")) != req.Form["secKey"])
+                            break;
+                        if (service.CheckIfContainerExists(req.Form["container"]))
                         {
                             service.DeleteClientContainer(req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
@@ -120,6 +121,10 @@ namespace ImageResizer
             {
                 log.LogInformation(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            }
+            finally
+            {
+                dbConnection.Dispose();
             }
 
             

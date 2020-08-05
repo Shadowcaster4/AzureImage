@@ -45,7 +45,7 @@ namespace ImageResizer.Functions
                 log.LogInformation(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
-
+           
         }
     }
 }

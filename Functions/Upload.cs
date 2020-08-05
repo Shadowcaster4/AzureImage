@@ -29,12 +29,8 @@ namespace ImageResizer
         {
             var resp = new HttpResponseMessage();
             try
-            {
-                
-              //var imageFromHttp = req.Form.Files.GetFile(req.Form.Files[0].Name).l;
-               var container = req.Form["container"];
-                
-
+            {  
+                var container = req.Form["container"];
 
                 if(req.Form.Files.Count==0 || container == string.Empty)
                 {
@@ -51,8 +47,6 @@ namespace ImageResizer
                     resp.Content = new StringContent("invalid container name");
                     return resp;
                 }
-
-
 
                 for(int i=0;i<req.Form.Files.Count;i++)
                 {
@@ -74,17 +68,15 @@ namespace ImageResizer
 
                 using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
                 {
-                    //if container table doesnt exists this will create it
+                    //if container dbtable doesnt exists this will create it
                     if(dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'").FirstOrDefault().amount==0)
                         dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");  
-                  
-
+                 
                     for (int i = 0; i < req.Form.Files.Count; i++)
                     {
                         string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
                         if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, dbConnection))
                             NotUploadedFiles.Add(req.Form.Files[i].FileName);
-
                     }
                 }
                  
@@ -98,7 +90,6 @@ namespace ImageResizer
                 resp.StatusCode = HttpStatusCode.Created;
                 resp.Content = new StringContent("Uploaded successfully");
                 return resp;
-
             }
             catch (Exception e)
             {

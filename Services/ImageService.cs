@@ -37,6 +37,7 @@ namespace ImageResizer.Services
             blobServiceClient = new BlobServiceClient(base._applicationConnectionString);
         }
 
+       
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
@@ -223,9 +224,8 @@ namespace ImageResizer.Services
 
             foreach(BlobItem image in blobs)
             {
-                BaseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Properties.ContentLength?? 0, image.Properties.CreatedOn?? new DateTimeOffset(DateTime.UtcNow.AddDays(2))));
+                BaseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Properties.ContentLength?? 0, image.Properties.CreatedOn.Value.UtcDateTime));
             }    
-           
             return BaseImagesDictionary;
         }
 
@@ -258,19 +258,14 @@ namespace ImageResizer.Services
 
         public IImageEncoder GetImageEncoder(string fileFormat)
         {
-            switch (fileFormat)
+            return fileFormat switch
             {
-                case "png":
-                    return new PngEncoder();
-                case "jpg":
-                    return new JpegEncoder();
-                case "jpeg":
-                    return new JpegEncoder();
-                case "gif":
-                    return new GifEncoder();
-                default:
-                    return new JpegEncoder();
-            }
+                "png" => new PngEncoder(),
+                "jpg" => new JpegEncoder(),
+                "jpeg" => new JpegEncoder(),
+                "gif" => new GifEncoder(),
+                _ => new JpegEncoder(),
+            };
         }
 
         public IImageDecoder GetImageDecoder(string fileFormat)
@@ -292,19 +287,18 @@ namespace ImageResizer.Services
 
         public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat, bool watermark)
         {
-            Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
+            Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());       
 
             if (fileFormat == "png")
             {
                 var whiteBackgroundForPngImage = new Image<Rgba32>(image.Width, image.Height, Color.FromRgb(255, 255, 255));
                 whiteBackgroundForPngImage.Mutate(x => x.DrawImage(image, new Point(0, 0), 1.0f));
                 image = whiteBackgroundForPngImage;
-
             }
 
             if (watermark)
-            {
-                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));
+            {            
+                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));                
                 Image<Rgba32> watermarkImage = (Image<Rgba32>)Image.Load(watermarkStream.ToArray());
                 watermarkImage.Mutate(x => x.Resize(new ResizeOptions
                 {
@@ -329,7 +323,8 @@ namespace ImageResizer.Services
 
             if (padding)
             {
-                var imageContainer = new Image<Rgba32>(width, heigth, Color.FromRgb(255, 0, 0));
+                //var
+                Image<Rgba32> imageContainer = new Image<Rgba32>(width, heigth, Color.FromRgb(255, 0, 0));
                 if (image.Width < imageContainer.Width)
                     imageContainer.Mutate(x => x.DrawImage(image, new Point((imageContainer.Width / 2) - (image.Width / 2), 0), 1.0f));
                 if (image.Height < imageContainer.Height)
@@ -338,6 +333,7 @@ namespace ImageResizer.Services
             }
             var output = new MemoryStream();
             image.Save(output, imageFormatEncoder);
+            image.Dispose();
             return output;
         }
 
@@ -370,6 +366,17 @@ namespace ImageResizer.Services
 
         public string GetImageExtension(string fileName)
         {
+            return fileName.Substring(fileName.LastIndexOf(".") + 1) switch
+            {
+                "png" => "png",
+                "jpg" => "jpeg",
+                "jpeg" => "jpeg",
+                "gif" => "gif",
+                _ => "notsupported"
+
+            };
+            /*
+
             if (fileName.EndsWith(".png"))
                 return "png";
             if (fileName.EndsWith(".jpg"))
@@ -380,7 +387,7 @@ namespace ImageResizer.Services
                 return "gif";
 
             return "not-supported";
-            
+            */
         }
 
         public bool CheckIfParametersAreInRange(int width, int height)
