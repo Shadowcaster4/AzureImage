@@ -1,3 +1,4 @@
+using ImageResizer.Entities;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -29,8 +31,10 @@ namespace ImageResizer
 
                 if (!service.SetServiceContainer(container))
                 {
+                    //var emptyCloudImages = new Dictionary<string, CloudFileInfo>();
                     resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Provided container is innvalid");
+                    resp.Content = new StringContent("");
+                    resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     return resp;
                 }
                

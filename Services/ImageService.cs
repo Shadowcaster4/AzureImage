@@ -149,7 +149,7 @@ namespace ImageResizer.Services
             return flag;
         }
 
-        public bool DeleteLetterDirectory(string fileName)
+        public bool DeleteLetterDirectory(string fileName,IDbConnection dbConnection)
         {
             var containerObjects = GetImagesFromContainer();
             bool flag = false;
@@ -158,6 +158,7 @@ namespace ImageResizer.Services
                 if (blobItem.Name.StartsWith(fileName[0] + "/"))
                 {
                     blobContainerClient.DeleteBlobIfExists(blobItem.Name);
+                    dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + blobContainerClient.Name}   where imageName='{blobItem.Name.Substring(blobItem.Name.LastIndexOf("/")+1)}'");
                     flag = true;
                 }
             }

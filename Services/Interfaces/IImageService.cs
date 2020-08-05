@@ -21,7 +21,7 @@ namespace ImageResizer.Services.Interfaces
         bool DeleteCachedImage(string imagePath);
         bool DeleteClientContainer(string clientContainerName);
         bool DeleteImageDirectory(string directoryName);
-        bool DeleteLetterDirectory(string fileName);
+        bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection);
         MemoryStream DownloadImageFromStorageToStream(string imagePath);
         Pageable<BlobContainerItem> GetBlobContainers();
         string GetImagePathResize(QueryParameterValues parameters, string fileName);

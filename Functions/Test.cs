@@ -36,7 +36,7 @@ namespace ImageResizer.Functions
                 //  cnn.Open();
                 var image = new ImageData()
                 {
-                    ContainerName = "testowySzef",
+                    
                     ImageName = "grucha.png",
                     Width = 444,
                     Height = 555,
@@ -45,7 +45,8 @@ namespace ImageResizer.Functions
                 // cnn.Execute("insert into UploadedImagesResolution (containerName,imageName,width,height,size) values (@containerName,@imageName,@width,@height,@size)", image);
                 string baseTableName = "UploadedImagesResolution_";
                 string tableName = baseTableName + "xyz";
-                var x = cnn.Query<tmpObj>($"SELECT COUNT(tbl_name) as 'amount' from sqlite_master where tbl_name = 'UploadedImagesResolution'",new DynamicParameters()).FirstOrDefault();
+                //var x = cnn.Query<tmpObj>($"SELECT COUNT(tbl_name) as 'amount' from sqlite_master where tbl_name = 'UploadedImagesResolution'",new DynamicParameters()).FirstOrDefault();
+                var x = cnn.Query($"SELECT COUNT(tbl_name) as 'amount' from sqlite_master where tbl_name = 'UploadedImagesResolution44'",new DynamicParameters()).FirstOrDefault();
                
                 // var y = JsonConvert.DeserializeAnonymousType(x.FirstOrDefault(p=>p.amount), new { amount = "" });
                 //cnn.Query<ImageData>("delete  from UploadedImagesResolution where imageName='Bez_tytulu.png' AND containerName='testowykontenerdousuniecia'", new DynamicParameters());

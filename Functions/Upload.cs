@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace ImageResizer
@@ -66,23 +69,32 @@ namespace ImageResizer
                         return resp;
                     }                    
                 }
-                //@"Data Source=.\Database\ImageResizerDB.db;Version=3;"
-               
+
+                List<string> NotUploadedFiles = new List<string>();
+
                 using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
                 {
                     //if container table doesnt exists this will create it
                     if(dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'").FirstOrDefault().amount==0)
                         dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");  
-                    
-
+                  
 
                     for (int i = 0; i < req.Form.Files.Count; i++)
                     {
                         string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
-                        service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath,dbConnection);
+                        if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, dbConnection))
+                            NotUploadedFiles.Add(req.Form.Files[i].FileName);
+
                     }
                 }
-                                
+                 
+                if(NotUploadedFiles.Count>0)
+                {
+                    resp.StatusCode = HttpStatusCode.MultiStatus;
+                    resp.Content = new StringContent(JsonConvert.SerializeObject(value:NotUploadedFiles));
+                    resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    return resp;
+                }
                 resp.StatusCode = HttpStatusCode.Created;
                 resp.Content = new StringContent("Uploaded successfully");
                 return resp;

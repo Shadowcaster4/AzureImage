@@ -29,8 +29,7 @@ namespace ImageResizer
                 var service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
                 IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-
-
+                
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
@@ -40,7 +39,7 @@ namespace ImageResizer
 
                 switch (req.Form["objectToDelete"])
                 {
-                    case "container":
+                    case "container":  
                         if (service.CheckIfContainerExists(req.Form["container"]) && 
                             service.GetImageSecurityHash(req.Form["container"], Environment.GetEnvironmentVariable("ContainerRemoveKey")) ==
                             req.Form["secKey"])
@@ -96,7 +95,7 @@ namespace ImageResizer
                     case "letterDirectory":
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
                             break;
-                        if (service.DeleteLetterDirectory(req.Form["imageName"]))
+                        if (service.DeleteLetterDirectory(req.Form["imageName"],dbConnection))
                         {
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested letter directory is gone");
