@@ -35,8 +35,8 @@ namespace ImageResizer.Functions
                 resp.StatusCode = HttpStatusCode.OK;
                 resp.Content = new StringContent(JsonConvert.SerializeObject(value: new {
                     ContainersNames = containers
-                    .Where(x=>!x.Name.Contains("azure-webjobs"))
-                    .Select(x=>x.Name)}));
+                    .Where(x=>!x.Contains("azure-webjobs"))
+                    }));
                 resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 return resp;
             }

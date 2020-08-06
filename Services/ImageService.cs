@@ -63,9 +63,9 @@ namespace ImageResizer.Services
             return false;
 
         }
-        public Azure.Pageable<BlobContainerItem> GetBlobContainers()
+        public List<string> GetBlobContainers()
         {
-            return blobServiceClient.GetBlobContainers();
+            return blobServiceClient.GetBlobContainers().Select(x=>x.Name).ToList();
         }
 
         public bool DeleteClientContainer(string clientContainerName)

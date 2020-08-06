@@ -23,7 +23,7 @@ namespace ImageResizer.Services.Interfaces
         bool DeleteImageDirectory(string directoryName);
         bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection);
         MemoryStream DownloadImageFromStorageToStream(string imagePath);
-        Pageable<BlobContainerItem> GetBlobContainers();
+        List<string> GetBlobContainers();
         string GetImagePathResize(QueryParameterValues parameters, string fileName);
         string GetImagePathUpload(string fileName);
         string GetImageExtension(string fileName);

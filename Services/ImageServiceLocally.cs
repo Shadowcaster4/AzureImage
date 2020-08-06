@@ -35,12 +35,6 @@ namespace ImageResizer.Services.Interfaces
            // directoryContainerClient = new DirectoryInfo(@"C:\Users\Tanatos\source\repos\import\import");
             
         }
-
-
-       
-
-
-
         
 
         public bool CheckIfContainerExists(string containerName)
@@ -66,7 +60,7 @@ namespace ImageResizer.Services.Interfaces
         public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection)
         {
             ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
-            return width > imageData.Width && height > imageData.Height ? false : true;
+            return width <= imageData.Width || height <= imageData.Height;
         }
 
 
@@ -82,46 +76,95 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteCachedImage(string imagePath)
         {
-            throw new NotImplementedException();
+            if (SetImageObject(imagePath))
+            {
+                fileBaseClient.Delete();
+                return true;
+            }
+            return false;
         }
 
         public bool DeleteClientContainer(string clientContainerName)
         {
-            throw new NotImplementedException();
+            directoryContainerClient.Delete(true);
+            return true;
         }
 
         public bool DeleteImageDirectory(string directoryName)
         {
-            throw new NotImplementedException();
+            Directory.Delete(directoryContainerClient.FullName+"\\"+directoryName, true);     
+            return true;
         }
 
         public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection)
         {
-            throw new NotImplementedException();
+           
+            bool flag = false;
+
+            foreach (var letterDir in directoryContainerClient.GetDirectories())
+            {
+                foreach (var dir in letterDir.GetDirectories())
+                {
+                    foreach (var image in dir.GetFiles())
+                    {
+                        dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + image.Name}   where imageName='{image.Name}'");
+                        flag = true;
+                    }
+                }
+            }
+
+            Directory.Delete(directoryContainerClient.FullName + "\\" + fileName[0]);
+
+            return flag;
         }
 
 
         public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
         {
-            throw new NotImplementedException();
+            if (!directoryContainerClient.Exists)
+                throw new Exception("Blob container is not set");
+         
+            
+            var BaseImagesDictionary = new Dictionary<string, CloudFileInfo>();
+
+            foreach (var letterDir in directoryContainerClient.GetDirectories())
+            {
+                foreach (var dir in letterDir.GetDirectories())
+                {
+                    foreach (var image in dir.GetFiles())
+                    {
+                        BaseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Length, image.CreationTime));
+                    }
+                }
+            }
+
+
+        
+            return BaseImagesDictionary;
         }
 
-        public Pageable<BlobContainerItem> GetBlobContainers()
+        public List<string> GetBlobContainers()
         {
-            throw new NotImplementedException();
+            return containerServiceClient.GetDirectories().Select(x=>x.Name).ToList();
         }
 
         public Dictionary<string, DateTimeOffset> GetCachedImagesDictionary()
         {
+            
             throw new NotImplementedException();
         }
 
        
         public string Test(string fileName)
         {
-            var x = directoryContainerClient.FullName;
-            var y = fileName;
-            return x+y;
+            string y = "";
+            var x = containerServiceClient.GetFileSystemInfos();
+            foreach(FileSystemInfo fileSystemInfo in x)
+            {
+
+                y += fileSystemInfo.Name;
+            }
+            return y;
         }
 
 
@@ -141,7 +184,23 @@ namespace ImageResizer.Services.Interfaces
 
         public Dictionary<string, long> GetImagesDictionarySize()
         {
-            throw new NotImplementedException();
+            if (!directoryContainerClient.Exists)
+                throw new Exception("Blob container is not set");
+           
+            Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
+
+            foreach (var letterDir in directoryContainerClient.GetDirectories())
+            {
+                foreach (var dir in letterDir.GetDirectories())
+                {
+                    foreach (var file in dir.GetFiles())
+                    {
+                        imagesDictionary.Add(file.Name, file.Length);
+                    }
+                }
+            }
+
+            return imagesDictionary;
         }
 
        
@@ -298,8 +357,8 @@ namespace ImageResizer.Services.Interfaces
                 return false;
             imageToSave.Position = 0;
             string fullPath = directoryContainerClient.FullName + "\\" + imagePath;
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
 
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
             using FileStream saveResizedImage = File.Create(directoryContainerClient.FullName+"\\" + imagePath);
             {
                 imageToSave.WriteTo(saveResizedImage);
@@ -365,15 +424,7 @@ namespace ImageResizer.Services.Interfaces
             return HashMyString(container + imageName + imageSize);
         }
 
-        Pageable<BlobContainerItem> IImageService.GetBlobContainers()
-        {
-            throw new NotImplementedException();
-        }
-
-        Pageable<BlobItem> IImageService.GetImagesFromContainer()
-        {
-            throw new NotImplementedException();
-        }
+       
         #endregion
     }
 }
