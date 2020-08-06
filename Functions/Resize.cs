@@ -33,7 +33,8 @@ namespace ImageResizer
 
             try
             {
-                IImageService service =new ImageService();
+                //IImageService service =new ImageService();
+                IImageService service =new ImageServiceLocally();
                 var requestedParameters = new QueryParameterValues(parameters);
                 
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))

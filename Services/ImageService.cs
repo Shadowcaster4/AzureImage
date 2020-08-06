@@ -30,14 +30,17 @@ namespace ImageResizer.Services
         public ImageService(string applicationConnectionString) : base(applicationConnectionString)
         {
             blobServiceClient = new BlobServiceClient(applicationConnectionString);
+            
         }
 
         public ImageService() : base()
         {
             blobServiceClient = new BlobServiceClient(base._applicationConnectionString);
+            
         }
-
        
+      
+        
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
@@ -91,6 +94,7 @@ namespace ImageResizer.Services
             if (blobContainerClient.GetBlobBaseClient(imagePath).Exists())
                 return true;
             return false;
+            
         }
         public bool SetImageObject(string imagePath)
         {
@@ -416,9 +420,15 @@ namespace ImageResizer.Services
             return HashMyString(container + imageName + imageSize);
         }
 
-        
+
 
         #endregion
 
+        public string Test(string fileName)
+        {
+           // var x = directoryContainerClient.FullName;
+            var x = fileName;
+            return x;
+        }
     }
 }

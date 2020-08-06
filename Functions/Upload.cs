@@ -39,7 +39,8 @@ namespace ImageResizer
                     return resp;
                 }
 
-                IImageService service = new ImageService();
+                IImageService service = new ImageServiceLocally();
+               // IImageService service = new ImageService();
 
                 if(!service.CheckIfContainerNameIsValid(container))
                 {

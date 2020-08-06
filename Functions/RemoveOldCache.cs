@@ -34,10 +34,11 @@ namespace ImageResizer
 
                 var cachedImagesDictionary = service.GetCachedImagesDictionary();
                 bool flag = true;
+                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
 
                 foreach (var item in cachedImagesDictionary)
                 {
-                    if (item.Value < DateTimeOffset.UtcNow.AddDays(-15))
+                    if (item.Value < DateTimeOffset.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
                         if (!service.DeleteCachedImage(item.Key))
                             flag = false;
                 }

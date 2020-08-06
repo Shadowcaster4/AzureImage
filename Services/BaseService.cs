@@ -6,14 +6,17 @@ namespace ImageResizer.Services
     {
         //storage connection
         protected readonly string _applicationConnectionString;
-        //protected readonly string _databaseConnectionString;
+        
 
         public BaseService()
         {
+          //  _applicationConnectionString = @"C:\Users\Tanatos\source\repos\import";
+           
             if(Environment.GetEnvironmentVariable("LocalStorageFlag")=="true")
             _applicationConnectionString = Environment.GetEnvironmentVariable("LocalStorageConnectionString");
             else
             _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+           
         }
 
         public BaseService(string applicationConnectionString)
