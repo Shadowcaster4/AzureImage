@@ -1,6 +1,7 @@
 using Dapper;
 using ImageResizer.Entities;
 using ImageResizer.Services;
+using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -27,7 +28,8 @@ namespace ImageResizer
             try
             {
                 var resp = new HttpResponseMessage();
-                var service = new ImageService();
+                //IImageService service =new ImageService();
+                IImageService service = new ImageServiceLocally();
                 resp.StatusCode = HttpStatusCode.Forbidden;
                 dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
                 

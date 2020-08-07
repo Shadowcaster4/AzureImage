@@ -33,7 +33,6 @@ namespace ImageResizer.Services.Interfaces
         Dictionary<string, long> GetImagesDictionarySize();
         Dictionary<string, CloudFileInfo> GetBaseImagesDictionary();
         Dictionary<string, DateTimeOffset> GetCachedImagesDictionary();
-        Pageable<BlobItem> GetImagesFromContainer();
         MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat,bool watermark);
         bool SaveImage(MemoryStream imageToSave, string imagePath);
         bool SetImageObject(string imagePath);

@@ -26,7 +26,8 @@ namespace ImageResizer
             try
             {
                 var resp = new HttpResponseMessage();
-                IImageService service = new ImageService();
+                //IImageService service =new ImageService();
+                IImageService service = new ImageServiceLocally();
                 if (!service.SetServiceContainer(container))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;

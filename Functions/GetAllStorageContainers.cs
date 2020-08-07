@@ -30,7 +30,8 @@ namespace ImageResizer.Functions
             try
             {
                 var resp = new HttpResponseMessage();
-                IImageService service = new ImageService();
+                //IImageService service =new ImageService();
+                IImageService service = new ImageServiceLocally();
                 var containers = service.GetBlobContainers();
                 resp.StatusCode = HttpStatusCode.OK;
                 resp.Content = new StringContent(JsonConvert.SerializeObject(value: new {

@@ -205,15 +205,6 @@ namespace ImageResizer.Services.Interfaces
 
        
 
-        public Pageable<BlobItem> GetImagesFromContainer()
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-
-
        
 
         public bool SetImageObject(string imagePath)
