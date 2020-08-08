@@ -97,7 +97,7 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteImageDirectory(string directoryName)
         {
-            if (File.Exists(directoryContainerClient.FullName + "\\" + directoryName))
+            if (File.Exists(directoryContainerClient.FullName + "\\" + GetImagePathUpload(directoryName)))
             {
                 string directoryPath = directoryContainerClient.FullName + "\\" + GetImagePathUpload(directoryName);
                 directoryPath = directoryPath.Substring(0, directoryPath.LastIndexOf("\\"));
@@ -113,20 +113,16 @@ namespace ImageResizer.Services.Interfaces
            
             bool flag = false;
 
-            foreach (var letterDir in directoryContainerClient.GetDirectories())
+            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
+            GetLocalFiles(myBaseImagesDictionary, directoryContainerClient.FullName, 2);
+
+            foreach(var baseImage in myBaseImagesDictionary.Where(x=>x.Key.Contains($@"\{fileName[0]}")))
             {
-                foreach (var dir in letterDir.GetDirectories())
-                {
-                    foreach (var image in dir.GetFiles())
-                    {
-                        dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + directoryContainerClient.Name}   where imageName='{image.Name}'");
-                        flag = true;
-                    }
-                }
+                dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + directoryContainerClient.Name}   where imageName='{Path.GetFileName(baseImage.Key)}'");
+                flag = true;
             }
-
+        
             Directory.Delete(directoryContainerClient.FullName + "\\" + fileName[0],true);
-
             return flag;
         }
 
@@ -134,25 +130,12 @@ namespace ImageResizer.Services.Interfaces
         public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
         {
             if (!directoryContainerClient.Exists)
-                throw new Exception("Blob container is not set");
-         
-            
-            var BaseImagesDictionary = new Dictionary<string, CloudFileInfo>();
+                throw new Exception("Blob container is not set");                     
+           
+            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string,LocalFileInfo>();
 
-            foreach (var letterDir in directoryContainerClient.GetDirectories())
-            {
-                foreach (var dir in letterDir.GetDirectories())
-                {
-                    foreach (var image in dir.GetFiles())
-                    {
-                        BaseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Length, image.CreationTime));
-                    }
-                }
-            }
-
-
-        
-            return BaseImagesDictionary;
+            GetLocalFiles(myBaseImagesDictionary, directoryContainerClient.FullName, 2);
+            return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
         }
 
         public List<string> GetBlobContainers()
@@ -160,29 +143,38 @@ namespace ImageResizer.Services.Interfaces
             return containerServiceClient.GetDirectories().Select(x=>x.Name).ToList();
         }
 
-        public Dictionary<string, DateTimeOffset> GetCachedImagesDictionary()
+        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int deepth)
         {
-            
-            throw new NotImplementedException();
+            string[] subDirs = Directory.GetDirectories(startLocation);
+
+            if (deepth == 0)
+            {
+                string[] files = Directory.GetFiles(startLocation, "*.*");
+                foreach (string file in files)
+                {
+                    FileInfo tmpFile = new FileInfo(Path.GetFullPath(file));
+                    myFiles.Add(file, new LocalFileInfo(tmpFile.Name, tmpFile.Length, tmpFile.CreationTime));
+                }
+                return myFiles;
+            }
+
+            foreach (string dir in subDirs)
+            {
+                GetLocalFiles(myFiles, dir, deepth - 1);
+            }
+            return myFiles;
         }
 
-        public static Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string dirPath)
+        public Dictionary<string, DateTime> GetCachedImagesDictionary()
         {
-            string[] files = Directory.GetFiles(dirPath, "*.*");
-            string[] subDirs = Directory.GetDirectories(dirPath);
+            Dictionary<string, LocalFileInfo> cachedImages =new Dictionary<string, LocalFileInfo>();
 
-            foreach (string file in files)
-            {
-                myFiles.Add(file,new LocalFileInfo(Path.GetFileName(file),new FileInfo(Path.GetFullPath(file)).Length,File.GetCreationTime(Path.GetFullPath(file))));
-            }
-           // var dictionary = new Dictionary<string, CloudFileInfo>();
-            foreach (string subDir in subDirs)
-            {
-                GetLocalFiles(myFiles, subDir);
-            }
-            return myFiles;//.Concat(dictionary).GroupBy(d => d.Key).ToDictionary(d => d.Key, d => d.First().Value);
+            GetLocalFiles(cachedImages, directoryContainerClient.FullName, 3);
+
+            return  cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
         }
 
+      
         public string Test(string fileName)
         {
             
@@ -211,16 +203,12 @@ namespace ImageResizer.Services.Interfaces
            
             Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
 
-            foreach (var letterDir in directoryContainerClient.GetDirectories())
+            var myContainerFiles = directoryContainerClient.GetFiles("*", SearchOption.AllDirectories);
+
+            foreach(var file in myContainerFiles)
             {
-                foreach (var dir in letterDir.GetDirectories())
-                {
-                    foreach (var file in dir.GetFiles())
-                    {
-                        imagesDictionary.Add(file.Name, file.Length);
-                    }
-                }
-            }
+                imagesDictionary.Add(file.Name, file.Length);
+            }         
 
             return imagesDictionary;
         }
@@ -249,9 +237,7 @@ namespace ImageResizer.Services.Interfaces
                 directoryContainerClient = new DirectoryInfo(containerServiceClient.FullName + "\\" + containerName);
                 return true;
             }
-            return false;
-
-           
+            return false;           
         }
 
         public bool UploadImage(Stream image, string userContainerName, string imagePath, IDbConnection dbConnection)
@@ -283,6 +269,7 @@ namespace ImageResizer.Services.Interfaces
                 MemoryStream tmpStream = new MemoryStream();
                 image.CopyTo(tmpStream);
                 tmpStream.WriteTo(uploadImage);
+                uploadImage.Close();
                 uploadImage.Dispose();
             }
             
@@ -299,8 +286,13 @@ namespace ImageResizer.Services.Interfaces
         {
             SetImageObject(imagePath);
             MemoryStream outputStream = new MemoryStream();
-            File.OpenRead(directoryContainerClient.FullName + "\\" + imagePath).CopyTo(outputStream);            
-           // fileBaseClient.Open(FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite).CopyTo(outputStream);          
+            using(var fs = File.Open(directoryContainerClient.FullName + "\\" + imagePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                fs.CopyTo(outputStream);
+               // fs.Close();
+                fs.Dispose();
+            }    
+            //fileBaseClient.Open(FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite).CopyTo(outputStream);          
             return outputStream;
         }
 
@@ -374,9 +366,12 @@ namespace ImageResizer.Services.Interfaces
             string fullPath = directoryContainerClient.FullName + "\\" + imagePath;
 
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+          
             using FileStream saveResizedImage = File.Create(directoryContainerClient.FullName+"\\" + imagePath);
             {
                 imageToSave.WriteTo(saveResizedImage);
+                
+                saveResizedImage.Close();
                 saveResizedImage.Dispose();
             }
             return true;

@@ -39,7 +39,7 @@ namespace ImageResizer
 
                 foreach (var item in cachedImagesDictionary)
                 {
-                    if (item.Value < DateTimeOffset.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
+                    if (item.Value < DateTime.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
                         if (!service.DeleteCachedImage(item.Key))
                             flag = false;
                 }

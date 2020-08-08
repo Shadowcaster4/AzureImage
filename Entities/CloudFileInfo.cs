@@ -14,5 +14,8 @@ namespace ImageResizer.Entities
             Size = size;
             Date = date;
         }
+
+     
+
     }
 }

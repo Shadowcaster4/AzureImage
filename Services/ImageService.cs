@@ -233,16 +233,16 @@ namespace ImageResizer.Services
             return BaseImagesDictionary;
         }
 
-        public Dictionary<string, DateTimeOffset> GetCachedImagesDictionary()
+        public Dictionary<string, DateTime> GetCachedImagesDictionary()
         {
             if (!blobContainerClient.Exists())
                 throw new Exception("Blob container is not set");
             var blobs = blobContainerClient.GetBlobs().Where(x => x.Name.Count(element => element == '/') > 2);
-            var CachedImagesDictionary = new Dictionary<string, DateTimeOffset>();
+            var CachedImagesDictionary = new Dictionary<string, DateTime>();
 
             foreach (BlobItem image in blobs)
             {
-                CachedImagesDictionary.Add(image.Name, image.Properties.CreatedOn ?? new DateTimeOffset(DateTime.UtcNow.AddDays(2)));
+                CachedImagesDictionary.Add(image.Name, image.Properties.CreatedOn.Value.DateTime);
             }
 
             return CachedImagesDictionary;

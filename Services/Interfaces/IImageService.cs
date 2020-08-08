@@ -32,7 +32,7 @@ namespace ImageResizer.Services.Interfaces
         IImageEncoder GetImageEncoder(string fileFormat);
         Dictionary<string, long> GetImagesDictionarySize();
         Dictionary<string, CloudFileInfo> GetBaseImagesDictionary();
-        Dictionary<string, DateTimeOffset> GetCachedImagesDictionary();
+        Dictionary<string, DateTime> GetCachedImagesDictionary();
         MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat,bool watermark);
         bool SaveImage(MemoryStream imageToSave, string imagePath);
         bool SetImageObject(string imagePath);
