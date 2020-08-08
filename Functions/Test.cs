@@ -13,6 +13,7 @@ using ImageResizer.Entities;
 using System.Data.SQLite;
 using System.Linq;
 using ImageResizer.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace ImageResizer.Functions
 {
@@ -27,11 +28,12 @@ namespace ImageResizer.Functions
         {
 
             IImageService service = new ImageServiceLocally();
+            Dictionary<string, LocalFileInfo> testDictionary = new Dictionary<string, LocalFileInfo>();
 
-                   
+            var xyz = ImageServiceLocally.GetLocalFiles(testDictionary, @"C:\Users\Tanatos\source\repos\import");
            
 
-            return new OkObjectResult(service.Test(service.GetImagePathUpload("xddd.jpg")));
+            return new OkObjectResult(xyz);
         }
     }
 }
