@@ -1,6 +1,4 @@
-﻿using Azure;
-using Azure.Storage.Blobs.Models;
-using Dapper;
+﻿using Dapper;
 using ImageResizer.Entities;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -24,33 +22,23 @@ namespace ImageResizer.Services.Interfaces
     {
 
         private readonly DirectoryInfo serviceClient;
-        private DirectoryInfo containerClient;
-        
+        private DirectoryInfo containerClient;        
         
                 
         public ImageServiceLocally() : base()
         {
-            //  containerServiceClient = new DirectoryInfo(base._applicationConnectionString);
-            //   serviceClient = new DirectoryInfo(@"C:\Users\Tanatos\source\repos\import");
-            // directoryContainerClient = new DirectoryInfo(@"C:\Users\Tanatos\source\repos\import\import");     
             serviceClient = new DirectoryInfo(_applicationConnectionString);
         }
         
 
         public bool CheckIfContainerExists(string containerName)
-        {     
-            if (Directory.Exists(serviceClient.FullName + "\\" + containerName))
-            {
-               return true;
-            }
-            return false;            
+        {
+            return Directory.Exists(serviceClient.FullName + "\\" + containerName);          
         }      
 
         public bool CheckIfImageExists(string imagePath)
         {
-            if (File.Exists(containerClient.FullName+"\\"+imagePath))   
-                return true;
-            return false;
+            return File.Exists(containerClient.FullName + "\\" + imagePath);          
         }
 
         public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection)
@@ -63,8 +51,7 @@ namespace ImageResizer.Services.Interfaces
         {
             if (CheckIfContainerExists(clientContainerName))
                 return false;
-            serviceClient.CreateSubdirectory(clientContainerName);
-         
+            serviceClient.CreateSubdirectory(clientContainerName);         
             return true;
         }
 
@@ -74,8 +61,7 @@ namespace ImageResizer.Services.Interfaces
             {
                 string path = containerClient.FullName + "\\" + imagePath;
                 path = path.Substring(0, path.LastIndexOf("\\"));
-                Directory.Delete(Path.GetFullPath(path), true);
-                //fileBaseClient.Directory.Delete(true);                
+                Directory.Delete(Path.GetFullPath(path), true);                           
                 return true;
             }
             return false;
@@ -83,9 +69,16 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteClientContainer(string clientContainerName)
         {
-            //Directory.Delete(containerServiceClient + "\\"+ clientContainerName, true);
-            containerClient.Delete(true);
-            return true;
+            try
+            {
+                containerClient.Delete(true);
+                return true;
+            }
+            catch(Exception)
+            {
+                return false;
+            }
+          
         }
 
         public bool DeleteImageDirectory(string directoryName)
@@ -167,8 +160,7 @@ namespace ImageResizer.Services.Interfaces
 
       
         public string Test(string fileName)
-        {
-            
+        {            
             return fileName;
         }
 
@@ -183,8 +175,7 @@ namespace ImageResizer.Services.Interfaces
 
         public string GetImagePathUpload(string fileName)
         {
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
-            
+            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;            
         }
 
         public Dictionary<string, long> GetImagesDictionarySize()
@@ -207,12 +198,7 @@ namespace ImageResizer.Services.Interfaces
 
         public bool SetImageObject(string imagePath)
         {
-            if (CheckIfImageExists(imagePath))
-            {
-               // fileBaseClient = new FileInfo(directoryContainerClient.FullName + "\\" + imagePath);
-                return true;
-            }
-            return false;
+            return CheckIfImageExists(imagePath);          
         }
 
         public bool SetServiceContainer(string containerName)
@@ -258,8 +244,7 @@ namespace ImageResizer.Services.Interfaces
                 image.CopyTo(tmpStream);
                 tmpStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
-            }
-            
+            }            
 
             dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
 
@@ -364,16 +349,12 @@ namespace ImageResizer.Services.Interfaces
         #region Validation Methods /Utilities
         public bool CheckIfContainerNameIsValid(string containerName)
         {
-            if (!Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
-                return false;
-            return true;
+            return Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");           
         }
 
         public bool ChceckIfFileIsSupported(string fileName)
         {
-            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif")))
-                return false;
-            return true;
+            return (fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif"));           
         }
 
 
@@ -386,7 +367,6 @@ namespace ImageResizer.Services.Interfaces
                 "jpeg" => "jpeg",
                 "gif" => "gif",
                 _ => "notsupported"
-
             };
         }
 

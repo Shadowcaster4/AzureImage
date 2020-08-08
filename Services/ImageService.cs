@@ -29,17 +29,13 @@ namespace ImageResizer.Services
         private BlobBaseClient blobBaseClient;
         public ImageService(string applicationConnectionString) : base(applicationConnectionString)
         {
-            blobServiceClient = new BlobServiceClient(applicationConnectionString);
-            
+            blobServiceClient = new BlobServiceClient(applicationConnectionString);            
         }
 
         public ImageService() : base()
         {
-            blobServiceClient = new BlobServiceClient(base._applicationConnectionString);
-            
-        }
-       
-      
+            blobServiceClient = new BlobServiceClient(base._applicationConnectionString);            
+        }             
         
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
@@ -91,10 +87,7 @@ namespace ImageResizer.Services
         #region Image Blobs Methods
         public bool CheckIfImageExists(string imagePath)
         {
-            if (blobContainerClient.GetBlobBaseClient(imagePath).Exists())
-                return true;
-            return false;
-            
+            return blobContainerClient.GetBlobBaseClient(imagePath).Exists();               
         }
         public bool SetImageObject(string imagePath)
         {
@@ -356,16 +349,12 @@ namespace ImageResizer.Services
         #region Validation Methods /Utilities
         public bool CheckIfContainerNameIsValid(string containerName)
         {
-            if (!Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$"))
-                return false;
-            return true;
+            return Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");          
         }
 
         public bool ChceckIfFileIsSupported(string fileName)
         {
-            if (!(fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif")))
-                return false;
-            return true;
+            return (fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif"));        
         }
 
         public string GetImageExtension(string fileName)
@@ -396,7 +385,7 @@ namespace ImageResizer.Services
 
         public bool CheckIfParametersAreInRange(int width, int height)
         {
-            return (width > 2000 || width < 10 || height > 2000 || height < 10 ? true : false);
+            return (width > 2000 || width < 10 || height > 2000 || height < 10);
         }
         public string HashMyString(string stringToHash)
         {

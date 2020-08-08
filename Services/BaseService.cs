@@ -17,15 +17,8 @@ namespace ImageResizer.Services
                 "Azure" => Environment.GetEnvironmentVariable("AzureWebJobsStorage"),
                 "LocalAzure" => Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"),
                 _ => "Connection string Error",
-            };
-
-           
-            /* 
-            if(Environment.GetEnvironmentVariable("LocalStorageFlag")=="true")
-            _applicationConnectionString = Environment.GetEnvironmentVariable("LocalStorageConnectionString");
-            else
-            _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-            */
+            };         
+          
         }
 
         public BaseService(string applicationConnectionString)
