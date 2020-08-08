@@ -39,10 +39,13 @@ namespace ImageResizer
                     return resp;
                 }
 
-                IImageService service = new ImageServiceLocally();
-               // IImageService service = new ImageService();
+                IImageService service;
+                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                    service = new ImageServiceLocally();
+                else
+                    service = new ImageService();
 
-                if(!service.CheckIfContainerNameIsValid(container))
+                if (!service.CheckIfContainerNameIsValid(container))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
                     resp.Content = new StringContent("invalid container name");

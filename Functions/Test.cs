@@ -16,6 +16,7 @@ using ImageResizer.Services.Interfaces;
 using System.Collections.Generic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using ImageResizer.Services;
 
 namespace ImageResizer.Functions
 {
@@ -29,7 +30,11 @@ namespace ImageResizer.Functions
             ILogger log)
         {
 
-            IImageService service = new ImageServiceLocally();
+            IImageService service;
+            if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                service = new ImageServiceLocally();
+            else
+                service = new ImageService();
             Dictionary<string, LocalFileInfo> testDictionary = new Dictionary<string, LocalFileInfo>();
 
             //var xyz = ImageServiceLocally.GetLocalFiles(testDictionary, @"E:\imageresizer");
@@ -39,17 +44,15 @@ namespace ImageResizer.Functions
 
             IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
 
-            if (dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy"}'").FirstOrDefault().amount == 0)
-                dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy"}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");
+            if (dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy2"}'").FirstOrDefault().amount == 0)
+                dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy2"}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");
 
 
             foreach (var imagePath in x)
             {
                 using (var openImage = File.Open(imagePath.Key, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))//FileStream openImage= File.OpenRead(imagePath.Key))
-                {
-                    MemoryStream outputStream = new MemoryStream();
-                    openImage.CopyTo(outputStream);
-                    outputStream.Position = 0;
+                {                
+                  
                     openImage.Position = 0;
                     Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
                     ImageData imageData = new ImageData()
@@ -59,8 +62,8 @@ namespace ImageResizer.Functions
                         Height = imageObjCreatedForGettingImageData.Height,
                         Size = openImage.Length.ToString()
                     };
-                    dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy"} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
-                    outputStream.Dispose();
+                    dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "zobaczmy2"} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
+                    
                 }
             }
 

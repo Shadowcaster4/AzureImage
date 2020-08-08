@@ -23,8 +23,11 @@ namespace ImageResizer
             try
             {
                 var resp = new HttpResponseMessage();
-                //IImageService service =new ImageService();
-                IImageService service = new ImageServiceLocally();
+                IImageService service;
+                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                    service = new ImageServiceLocally();
+                else
+                    service = new ImageService();
 
                 if (!service.SetServiceContainer(container))
                 {

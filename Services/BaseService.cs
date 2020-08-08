@@ -10,13 +10,22 @@ namespace ImageResizer.Services
 
         public BaseService()
         {
-            _applicationConnectionString = @"C:\Users\Tanatos\source\repos\import";
-          /* 
+
+            _applicationConnectionString = Environment.GetEnvironmentVariable("ApplicationEnvironment") switch
+            {
+                "Local" => Environment.GetEnvironmentVariable("LocalStorageConnectionString"),
+                "Azure" => Environment.GetEnvironmentVariable("AzureWebJobsStorage"),
+                "LocalAzure" => Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"),
+                _ => "Connection string Error",
+            };
+
+           
+            /* 
             if(Environment.GetEnvironmentVariable("LocalStorageFlag")=="true")
             _applicationConnectionString = Environment.GetEnvironmentVariable("LocalStorageConnectionString");
             else
             _applicationConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-           */
+            */
         }
 
         public BaseService(string applicationConnectionString)
