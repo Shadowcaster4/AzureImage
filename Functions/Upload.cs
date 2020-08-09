@@ -1,4 +1,5 @@
 using Dapper;
+using ImageResizer.Database;
 using ImageResizer.Functions;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
@@ -73,7 +74,7 @@ namespace ImageResizer
                 IDatabaseService databaseService = new DatabaseService();
 
                 if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                    databaseService = new DatabaseService();
+                    databaseService = new DatabaseServiceLocally();
                 else
                     databaseService = new DatabaseService();
                 //if container dbtable doesnt exists this will create it
