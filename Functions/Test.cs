@@ -30,7 +30,7 @@ namespace ImageResizer.Functions
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-
+            /*
             IImageService service;
             if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
                 service = new ImageServiceLocally();
@@ -85,10 +85,12 @@ namespace ImageResizer.Functions
                 }
             }
             */
-            #endregion
 
 
-            return new OkObjectResult(File.Exists(x));
+            IDbConnection dbConnection = new database().dbConnection;
+
+
+            return new OkObjectResult(dbConnection.State);
         }
     }
 }
