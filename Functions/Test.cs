@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using ImageResizer.Services;
+using ImageResizer.Database;
 
 namespace ImageResizer.Functions
 {
@@ -37,7 +38,24 @@ namespace ImageResizer.Functions
                 service = new ImageService();
             Dictionary<string, LocalFileInfo> testDictionary = new Dictionary<string, LocalFileInfo>();
 
+
+            // var x = new database();
+
+
+            var x = Environment.GetEnvironmentVariable("DatabaseConnectionString");
+            x = x.Substring(x.IndexOf("."), x.IndexOf(';')-x.IndexOf("."));
+
+            var xyz = new FileInfo(x);
+            xyz.CopyTo(x +".Bak",true);
+            
+            File.Exists(x);
+            var gg =new FileInfo(x);
+            var yy = gg;
+
+            #region napotem
             //var xyz = ImageServiceLocally.GetLocalFiles(testDictionary, @"E:\imageresizer");
+
+            /*
             string[] dirs = Directory.GetDirectories(@"E:\imageresizer", "*", SearchOption.AllDirectories);
             var files = Directory.GetFiles(@"E:\imageresizer", "*", SearchOption.AllDirectories);
             var x = testClass.GetLocalFiles2(testDictionary, @"E:\imageresizer\bigcontainer6", 2);
@@ -66,11 +84,11 @@ namespace ImageResizer.Functions
                     
                 }
             }
+            */
+            #endregion
 
 
-           
-
-            return new OkObjectResult(x);
+            return new OkObjectResult(File.Exists(x));
         }
     }
 }
