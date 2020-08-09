@@ -88,14 +88,14 @@ namespace ImageResizer.Functions
 
 
            // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-           // var dbImagesList = dbConnection.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "bigcontainer6"}  ", new DynamicParameters());
+           
 
-
-            var x = new database().dbConnection;
+            var x = new DatabaseService().dbConnection;
+            var dbImagesList = x.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "bigcontainer6"}  ", new DynamicParameters());
 
             //dbImagesList = dbImagesList.Select(x => x.ToString());
 
-            return new OkObjectResult(x.State);
+            return new OkObjectResult(dbImagesList);
         }
     }
 }

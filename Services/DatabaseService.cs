@@ -14,11 +14,11 @@ using System.Linq;
 
 namespace ImageResizer.Database
 {
-    public class database
+    public class DatabaseService
     {        
         public IDbConnection dbConnection { get; }
 
-        public database()
+        public DatabaseService()
         {
             try
             {
@@ -50,8 +50,7 @@ namespace ImageResizer.Database
                 }
             }
             catch (Exception e)
-            {
-                
+            {                
                 throw e;
             }
         }
@@ -76,34 +75,40 @@ namespace ImageResizer.Database
         {
             foreach (string container in service.GetBlobContainers())
             {
-                if (dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'").FirstOrDefault().amount == 0)
-                    dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");
+                RestoreDataForContainer(service, container);
+            }
+        }
 
-                var dbImagesList = dbConnection.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}  ", new DynamicParameters());
 
-                service.SetServiceContainer(container);
-                var appImages = service.GetBaseImagesDictionary();
+        public void RestoreDataForContainer(IImageService service,string container)
+        {
+            if (dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'").FirstOrDefault().amount == 0)
+                dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");
 
-                List<string> absentFromDb = appImages.Keys.Except(dbImagesList.Select(x => x.ToString())).ToList();
+            var dbImagesList = dbConnection.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}  ", new DynamicParameters());
 
-                if (absentFromDb.Count > 0)
+            service.SetServiceContainer(container);
+            var appImages = service.GetBaseImagesDictionary();
+
+            List<string> absentFromDb = appImages.Keys.Except(dbImagesList.Select(x => x.ToString())).ToList();
+
+            if (absentFromDb.Count > 0)
+            {
+                foreach (var imageName in absentFromDb)
                 {
-                    foreach (var imageName in absentFromDb)
+                    using (var openImage = File.Open(Environment.GetEnvironmentVariable("LocalStorageConnectionString") + "\\" + container + "\\" + service.GetImagePathUpload(imageName), FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        using (var openImage = File.Open(Environment.GetEnvironmentVariable("LocalStorageConnectionString") +"\\"+container+"\\" + service.GetImagePathUpload(imageName), FileMode.Open, FileAccess.Read, FileShare.Read))
+                        openImage.Position = 0;
+                        Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
+                        ImageData imageData = new ImageData()
                         {
-                            openImage.Position = 0;
-                            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
-                            ImageData imageData = new ImageData()
-                            {
-                                ImageName = Path.GetFileName(imageName),
-                                Width = imageObjCreatedForGettingImageData.Width,
-                                Height = imageObjCreatedForGettingImageData.Height,
-                                Size = openImage.Length.ToString()
-                            };
-                            dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
-                            imageObjCreatedForGettingImageData.Dispose();
-                        }
+                            ImageName = Path.GetFileName(imageName),
+                            Width = imageObjCreatedForGettingImageData.Width,
+                            Height = imageObjCreatedForGettingImageData.Height,
+                            Size = openImage.Length.ToString()
+                        };
+                        dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
+                        imageObjCreatedForGettingImageData.Dispose();
                     }
                 }
             }
