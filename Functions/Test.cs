@@ -87,11 +87,17 @@ namespace ImageResizer.Functions
             */
 
 
-           // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-           
+            // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
 
-            var x = new DatabaseService().dbConnection;
-            var dbImagesList = x.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "bigcontainer6"}  ", new DynamicParameters());
+            IDatabaseService databaseService = new DatabaseService();
+                     
+            if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                databaseService = new DatabaseService();
+            else
+                databaseService = new DatabaseService();
+
+            
+            var dbImagesList = databaseService.dbConnection.Query<string>($"select imageName from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + "bigcontainer7"}  ", new DynamicParameters());
 
             //dbImagesList = dbImagesList.Select(x => x.ToString());
 

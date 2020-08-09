@@ -1,4 +1,5 @@
 using Dapper;
+using ImageResizer.Database;
 using ImageResizer.Entities;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
@@ -24,7 +25,7 @@ namespace ImageResizer
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req,
             ILogger log)
         {
-            IDbConnection dbConnection=null;
+            
             try
             {
                 var resp = new HttpResponseMessage();
@@ -34,8 +35,10 @@ namespace ImageResizer
                 else
                     service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
-                dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-                
+                //dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+
+                IDatabaseService databaseService;
+                              
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
@@ -53,7 +56,13 @@ namespace ImageResizer
                             service.DeleteClientContainer(req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");
-                            dbConnection.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
+
+                            if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                                databaseService = new DatabaseServiceLocally();
+                            else
+                                databaseService = new DatabaseService();
+                            databaseService.dbConnection.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
+                            databaseService.dbConnection.Dispose();
                         }
                         else
                         {                            
@@ -70,7 +79,12 @@ namespace ImageResizer
                         {
                         resp.StatusCode = HttpStatusCode.OK;
                         resp.Content = new StringContent("Requested directory is gone");
-                        dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
+                        if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                            databaseService = new DatabaseServiceLocally();
+                        else
+                            databaseService = new DatabaseService();
+                        databaseService.dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
+                        databaseService.dbConnection.Dispose();
                         }
                         else
                         {
@@ -101,10 +115,17 @@ namespace ImageResizer
                     case "letterDirectory":
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
                             break;
-                        if (service.DeleteLetterDirectory(req.Form["imageName"],dbConnection))
+
+                        if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                            databaseService = new DatabaseServiceLocally();
+                        else
+                            databaseService = new DatabaseService();
+
+                        if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection))
                         {
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested letter directory is gone");
+                            databaseService.dbConnection.Dispose();
                         }
                         else
                         {
@@ -127,10 +148,7 @@ namespace ImageResizer
                 log.LogInformation(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
-            finally
-            {
-                dbConnection.Dispose();
-            }
+           
 
             
         }

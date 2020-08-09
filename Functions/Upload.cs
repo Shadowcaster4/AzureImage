@@ -70,19 +70,22 @@ namespace ImageResizer
 
                 List<string> NotUploadedFiles = new List<string>();
 
-                using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
-                {
-                    //if container dbtable doesnt exists this will create it
-                    if(dbConnection.Query($"SELECT COUNT(tbl_name)  as 'amount' from sqlite_master where tbl_name = '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'").FirstOrDefault().amount==0)
-                        dbConnection.Execute($"CREATE TABLE \"{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}\" (\n\t\"Id\"\tINTEGER NOT NULL UNIQUE,\n\t\"ImageName\"\tTEXT NOT NULL UNIQUE,\n\t\"Width\"\tINTEGER NOT NULL,\n\t\"Height\"\tINTEGER NOT NULL,\n\t\"Size\"\tTEXT NOT NULL,\n\tPRIMARY KEY(\"Id\" AUTOINCREMENT)\n)");  
-                 
+                IDatabaseService databaseService = new DatabaseService();
+
+                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                    databaseService = new DatabaseService();
+                else
+                    databaseService = new DatabaseService();
+                //if container dbtable doesnt exists this will create it
+                databaseService.dbConnection.Execute($"CREATE TABLE if not exists '{(Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container)}' (Id INTEGER NOT NULL UNIQUE,ImageName TEXT NOT NULL UNIQUE,Width INTEGER NOT NULL,Height INTEGER NOT NULL,Size TEXT NOT NULL, PRIMARY KEY(Id AUTOINCREMENT))");
+
                     for (int i = 0; i < req.Form.Files.Count; i++)
                     {
                         string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
-                        if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, dbConnection))
+                        if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, databaseService.dbConnection))
                             NotUploadedFiles.Add(req.Form.Files[i].FileName);
                     }
-                }
+                
                  
                 if(NotUploadedFiles.Count>0)
                 {

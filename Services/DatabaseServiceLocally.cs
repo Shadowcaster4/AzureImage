@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using ImageResizer.Database;
 using ImageResizer.Entities;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
@@ -13,13 +12,13 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 
-namespace ImageResizer.Services
+namespace ImageResizer.Database
 {
-    public class DatabaseService:IDatabaseService
+    public class DatabaseServiceLocally : IDatabaseService
     {
         public IDbConnection dbConnection { get; }
 
-        public DatabaseService()
+        public DatabaseServiceLocally()
         {
             try
             {
@@ -74,7 +73,7 @@ namespace ImageResizer.Services
 
         public void CheckAndRestoreData(IImageService service)
         {
-            foreach (string container in service.GetBlobContainers().Where(x=>!x.Contains("azure-webjobs")))
+            foreach (string container in service.GetBlobContainers())
             {
                 RestoreDataForContainer(service, container);
             }
@@ -96,7 +95,8 @@ namespace ImageResizer.Services
             {
                 foreach (var imageName in absentFromDb)
                 {
-                        MemoryStream openImage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imageName));
+                    using (var openImage = File.Open(Environment.GetEnvironmentVariable("LocalStorageConnectionString") + "\\" + container + "\\" + service.GetImagePathUpload(imageName), FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
                         openImage.Position = 0;
                         Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
                         ImageData imageData = new ImageData()
@@ -108,8 +108,11 @@ namespace ImageResizer.Services
                         };
                         dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
                         imageObjCreatedForGettingImageData.Dispose();
+                    }
                 }
             }
         }
+
+
     }
 }

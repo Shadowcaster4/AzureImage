@@ -1,3 +1,4 @@
+using ImageResizer.Database;
 using ImageResizer.Entities;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
@@ -76,10 +77,14 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-                using (IDbConnection dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString")))
-                {
-                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, dbConnection);
-                }                             
+                IDatabaseService databaseService;
+                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                    databaseService = new DatabaseServiceLocally();
+                else
+                    databaseService = new DatabaseService();
+                
+                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection);
+                databaseService.dbConnection.Dispose();                         
 
                 //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
                 if (!(flagIsInOryginalImageRange))
