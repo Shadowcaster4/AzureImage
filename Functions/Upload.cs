@@ -72,11 +72,7 @@ namespace ImageResizer
                 List<string> NotUploadedFiles = new List<string>();
 
                 IDatabaseService databaseService = new DatabaseService();
-
-                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                    databaseService = new DatabaseServiceLocally();
-                else
-                    databaseService = new DatabaseService();
+                
                 //if container dbtable doesnt exists this will create it
                 databaseService.dbConnection.Execute($"CREATE TABLE if not exists '{(Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container)}' (Id INTEGER NOT NULL UNIQUE,ImageName TEXT NOT NULL UNIQUE,Width INTEGER NOT NULL,Height INTEGER NOT NULL,Size TEXT NOT NULL, PRIMARY KEY(Id AUTOINCREMENT))");
 

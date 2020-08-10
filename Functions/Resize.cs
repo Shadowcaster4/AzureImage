@@ -77,12 +77,8 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-                IDatabaseService databaseService;
-                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                    databaseService = new DatabaseServiceLocally();
-                else
-                    databaseService = new DatabaseService();
-                
+                IDatabaseService databaseService = new DatabaseService(); 
+                               
                     flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection);
                 databaseService.dbConnection.Dispose();                         
 

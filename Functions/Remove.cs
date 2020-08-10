@@ -35,10 +35,9 @@ namespace ImageResizer
                 else
                     service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
-                //dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+                
+                IDatabaseService databaseService =new DatabaseService();
 
-                IDatabaseService databaseService;
-                              
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
@@ -56,11 +55,7 @@ namespace ImageResizer
                             service.DeleteClientContainer(req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");
-
-                            if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                                databaseService = new DatabaseServiceLocally();
-                            else
-                                databaseService = new DatabaseService();
+                              
                             databaseService.dbConnection.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
                             databaseService.dbConnection.Dispose();
                         }
@@ -79,10 +74,7 @@ namespace ImageResizer
                         {
                         resp.StatusCode = HttpStatusCode.OK;
                         resp.Content = new StringContent("Requested directory is gone");
-                        if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                            databaseService = new DatabaseServiceLocally();
-                        else
-                            databaseService = new DatabaseService();
+                        
                         databaseService.dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
                         databaseService.dbConnection.Dispose();
                         }
@@ -114,12 +106,7 @@ namespace ImageResizer
                         break;
                     case "letterDirectory":
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
-                            break;
-
-                        if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                            databaseService = new DatabaseServiceLocally();
-                        else
-                            databaseService = new DatabaseService();
+                            break;         
 
                         if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection))
                         {
