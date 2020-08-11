@@ -61,7 +61,7 @@ namespace ImageResizer.Services
         }
         public List<string> GetBlobContainers()
         {
-            return blobServiceClient.GetBlobContainers().Select(x=>x.Name).ToList();
+            return blobServiceClient.GetBlobContainers().Select(x=>x.Name).Where(x => !x.Contains("azure-webjobs")).ToList();            
         }
 
         public bool DeleteClientContainer(string clientContainerName)

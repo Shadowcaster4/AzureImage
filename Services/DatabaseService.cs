@@ -27,15 +27,26 @@ namespace ImageResizer.Services
 
                if(CheckIfDbFileExist(dbConnString))
                {
-                    dbConnection= new OrmLiteConnectionFactory(dbConnString,SqliteDialect.Provider)
-               )
+                    dbConnection = new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
+               }
                else
                {
-
+                    CreateDatabase(dbConnString);
+                
+               IImageService service;
+               if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
+                    service = new ImageServiceLocally();
+               else
+                    service = new ImageService();
+                
+                
+               CheckAndRestoreData(service);
+               dbConnection = new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
+               
                }
-           
-               dbConnection = 
-
+               
+               
+             
                
             /*
             try
@@ -72,6 +83,10 @@ namespace ImageResizer.Services
             */
         }
 
+        public void CreateDatabase(string dbConnString)
+        {            
+            new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+        }
         public string GetDbFilePathFromConnString(string dbConnString)
         {
             return dbConnString.Substring(0, dbConnString.IndexOf(';'));
@@ -85,7 +100,7 @@ namespace ImageResizer.Services
         public void CheckAndRestoreData(IImageService service)
         {
             //todo:parallel tutaj 
-            foreach (string container in service.GetBlobContainers().Where(x=>!x.Contains("azure-webjobs")))
+            foreach (string container in service.GetBlobContainers())
             {
                 RestoreDataForContainer(service, container);
             }
