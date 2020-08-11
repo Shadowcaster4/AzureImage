@@ -5,6 +5,7 @@ using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using ServiceStack.OrmLite;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
@@ -106,13 +107,43 @@ namespace ImageResizer.Services
             }
         }
 
+        public bool CreateTableIfNotExists(IDbConnection dbConnection)
+        {
+            return dbConnection.CreateTableIfNotExists<ImageData>();
+        }
+
+        public ImageData GetImageProperties(IImageService service,string imageName)
+        {
+            MemoryStream openImage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imageName));
+            openImage.Position = 0;
+            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
+            ImageData imageData = new ImageData()
+            {
+                ImageName = Path.GetFileName(imageName),
+                Width = imageObjCreatedForGettingImageData.Width,
+                Height = imageObjCreatedForGettingImageData.Height,
+                Size = openImage.Length.ToString()
+            };
+            imageObjCreatedForGettingImageData.Dispose();
+            return imageData;
+        }
+
+        public void insertSingleImageData(ImageData imageDataToInsert)
+        {
+            dbConnection.Open().Insert<ImageData>(imageDataToInsert);                
+        }
+
+        public void insertMultipleImagesData(List<ImageData> imageDataList)
+        {
+            dbConnection.Open().InsertAll<ImageData>(imageDataList);
+        }
 
         public void RestoreDataForContainer(IImageService service, string container)
         {
             //todo: interfejs  kontener klienta - musi posiadac metode tabela w bazie danych
-            dbConnection.Execute($"CREATE TABLE if not exists '{(Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container)}' (Id INTEGER NOT NULL UNIQUE,ImageName TEXT NOT NULL UNIQUE,Width INTEGER NOT NULL,Height INTEGER NOT NULL,Size TEXT NOT NULL, PRIMARY KEY(Id AUTOINCREMENT))");
+            CreateTableIfNotExists(dbConnection.Open());
             //todo:orm
-            var dbImagesList = dbConnection.Query<string>($"select imageName from '{Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container}'  ", new DynamicParameters());
+            var dbImagesList = dbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container);
 
             //todo: wywalic setservicecontainer
             service.SetServiceContainer(container);
@@ -123,24 +154,18 @@ namespace ImageResizer.Services
 
             if (absentFromDb.Any())
             {
+                int iterator = 0;
+                List<ImageData> tmpImageDataToUploadList = new List<ImageData>();
                 foreach (var imageName in absentFromDb)
                 { //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
-                    //
-                        MemoryStream openImage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imageName));
-                        openImage.Position = 0;
-                        Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
-                        ImageData imageData = new ImageData()
-                        {
-                            ImageName = Path.GetFileName(imageName),
-                            Width = imageObjCreatedForGettingImageData.Width,
-                            Height = imageObjCreatedForGettingImageData.Height,
-                            Size = openImage.Length.ToString()
-                        };
+                  //
+                    tmpImageDataToUploadList.Add(GetImageProperties(service, imageName));
                     //todo:ladowanie do pamieci lista obiektow po skonczonej petli duze zapytanie bulk do bazy danych ewentualny iterator i paczki np po 100 rekordow 
                     //
-                        dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
-                        imageObjCreatedForGettingImageData.Dispose();
+                    if(iterator % 100 == 0)
+                    insertMultipleImagesData(tmpImageDataToUploadList);
                 }
+                insertMultipleImagesData(tmpImageDataToUploadList);
             }
         }
     }
