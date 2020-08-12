@@ -56,8 +56,8 @@ namespace ImageResizer
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");
                               
-                            databaseService.dbConnection.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
-                            databaseService.dbConnection.Dispose();
+                            databaseService.dbConnection2.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
+                            databaseService.dbConnection2.Dispose();
                         }
                         else
                         {                            
@@ -75,8 +75,8 @@ namespace ImageResizer
                         resp.StatusCode = HttpStatusCode.OK;
                         resp.Content = new StringContent("Requested directory is gone");
                         
-                        databaseService.dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
-                        databaseService.dbConnection.Dispose();
+                        databaseService.dbConnection2.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
+                        databaseService.dbConnection2.Dispose();
                         }
                         else
                         {
@@ -108,11 +108,11 @@ namespace ImageResizer
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
                             break;         
 
-                        if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection))
+                        if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection2))
                         {
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested letter directory is gone");
-                            databaseService.dbConnection.Dispose();
+                            databaseService.dbConnection2.Dispose();
                         }
                         else
                         {

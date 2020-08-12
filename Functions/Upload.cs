@@ -74,12 +74,12 @@ namespace ImageResizer
                 IDatabaseService databaseService = new DatabaseService();
                 
                 //if container dbtable doesnt exists this will create it
-                databaseService.dbConnection.Execute($"CREATE TABLE if not exists '{(Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container)}' (Id INTEGER NOT NULL UNIQUE,ImageName TEXT NOT NULL UNIQUE,Width INTEGER NOT NULL,Height INTEGER NOT NULL,Size TEXT NOT NULL, PRIMARY KEY(Id AUTOINCREMENT))");
+                databaseService.dbConnection2.Execute($"CREATE TABLE if not exists '{(Environment.GetEnvironmentVariable("SQLiteBaseTableName") + container)}' (Id INTEGER NOT NULL UNIQUE,ImageName TEXT NOT NULL UNIQUE,Width INTEGER NOT NULL,Height INTEGER NOT NULL,Size TEXT NOT NULL, PRIMARY KEY(Id AUTOINCREMENT))");
 
                     for (int i = 0; i < req.Form.Files.Count; i++)
                     {
                         string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
-                        if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, databaseService.dbConnection))
+                        if (!service.UploadImage(req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(), container, imagePath, databaseService.dbConnection2))
                             NotUploadedFiles.Add(req.Form.Files[i].FileName);
                     }
                 

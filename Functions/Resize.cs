@@ -79,8 +79,8 @@ namespace ImageResizer
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
                 IDatabaseService databaseService = new DatabaseService(); 
                                
-                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection);
-                databaseService.dbConnection.Dispose();                         
+                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection2);
+                databaseService.dbConnection2.Dispose();                         
 
                 //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
                 if (!(flagIsInOryginalImageRange))
