@@ -77,7 +77,7 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-                IDatabaseService databaseService = new DatabaseService(); 
+                IDatabaseService databaseService = new DatabaseService(""); 
                                
                     flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection2);
                 databaseService.dbConnection2.Dispose();                         

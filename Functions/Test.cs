@@ -89,7 +89,7 @@ namespace ImageResizer.Functions
 
             // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
 
-            IDatabaseService databaseService = new DatabaseService();
+            IDatabaseService databaseService = new DatabaseService(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
                      
         
 

@@ -36,7 +36,7 @@ namespace ImageResizer
                     service = new ImageService();
                 resp.StatusCode = HttpStatusCode.Forbidden;
                 
-                IDatabaseService databaseService =new DatabaseService();
+                IDatabaseService databaseService =new DatabaseService("");
 
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {

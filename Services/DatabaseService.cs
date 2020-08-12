@@ -19,84 +19,50 @@ namespace ImageResizer.Services
 {
     public class DatabaseService:IDatabaseService
     {
-       public IDbConnection dbConnection2 { get; }
-        public OrmLiteConnectionFactory dbConnection { get; }
+        public IDbConnection dbConnection2 { get; }
+        private  OrmLiteConnectionFactory DbConnection { get; }
+        private string DbConnString { get;}
 
-        public DatabaseService()
+
+
+        public DatabaseService(string dbConnString)
         {
-               string dbConnString = @Environment.GetEnvironmentVariable("DatabaseConnectionString");
-
-
-               if(CheckIfDbFileExist(dbConnString))
+               DbConnString = dbConnString;
+               if(CheckIfDbFileExist(DbConnString))
                {
-                
-                   dbConnection = new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
-               /*}
+                    DbConnection = SetDbConnection(DbConnString);
+               }
                else
-               {
-              */
-              // CreateDatabase(dbConnString);
+               {               
               
+                   CreateDatabase(dbConnString);
+               DbConnection = SetDbConnection(DbConnString);
+               IImageService service =
+                   Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
-               IImageService service;
-               if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                    service = new ImageServiceLocally();
-               else
-                    service = new ImageService();                
-                
                CheckAndRestoreData(service);
-               dbConnection = new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
-               
+        
                }
 
-            #region smiec
-            /*
-            try
-            {
-                string dbFilePath = Environment.GetEnvironmentVariable("DatabaseConnectionString");
-                dbFilePath = dbFilePath.Substring(dbFilePath.IndexOf("."), dbFilePath.IndexOf(';') - dbFilePath.IndexOf("."));
+           
+        }
 
-                FileInfo fileInfo = new FileInfo(dbFilePath);
-                if (fileInfo.Exists && fileInfo.Length > 0)
-                {
-                    dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-                }
-                else
-                {
-                    
-                    dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-
-                    IImageService service;
-                    if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                        service = new ImageServiceLocally();
-                    else
-                        service = new ImageService();
-
-                    CheckAndRestoreData(service);
-
-                
-
-                }
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-            */
-            #endregion
+        private OrmLiteConnectionFactory SetDbConnection(string dbConnString)
+        {
+           return new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
         }
 
         public void CreateDatabase(string dbConnString)
         {
-
-            SQLiteConnection database =  new System.Data.SQLite.SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
-            var xyz = database.FileName;
-
+            using(SQLiteConnection database = new System.Data.SQLite.SQLiteConnection(dbConnString))
+            {
+                database.Open();
+            }
         }
         public string GetDbFilePathFromConnString(string dbConnString)
         {
-            string con = dbConnString.Substring(dbConnString.IndexOf('=')+1, dbConnString.IndexOf(';')- dbConnString.IndexOf('=') - 1);
-            return con;
+            return dbConnString.Substring(dbConnString.IndexOf('=')+1, dbConnString.IndexOf(';')- dbConnString.IndexOf('=') - 1);
+            
         }
 
         public bool CheckIfDbFileExist(string databasePath)
@@ -116,7 +82,7 @@ namespace ImageResizer.Services
 
         public bool CreateTableIfNotExists()
         {
-            return dbConnection.Open().CreateTableIfNotExists<ImageData>();
+            return DbConnection.Open().CreateTableIfNotExists<ImageData>();
         }
 
         public ImageData GetImageProperties(IImageService service,string imageName,string container)
@@ -136,22 +102,20 @@ namespace ImageResizer.Services
             return imageData;
         }
 
-        public void InsertSingleImageData(ImageData imageDataToInsert)
-        {
-            dbConnection.Open().Insert<ImageData>(imageDataToInsert);                
-        }
+    
 
-        public void InsertMultipleImagesData(List<ImageData> imageDataList)
+        public void SaveImagesData(List<ImageData> imageDataList)
         {
-            dbConnection.Open().InsertAll<ImageData>(imageDataList);
+            using (var db = DbConnection.Open())
+            {
+                db.SaveAll<ImageData>(imageDataList);
+            }
         }
 
         public void RestoreDataForContainer(IImageService service, string container)
         {
-            //todo: interfejs  kontener klienta - musi posiadac metode tabela w bazie danych
-           
-            //todo:orm
-            var dbImagesList = dbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container);
+            //todo: interfejs  kontener klienta - musi posiadac metode tabela w bazie danych //todo:orm
+            var dbImagesList = DbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container);
 
             //todo: wywalic setservicecontainer
             service.SetServiceContainer(container);
@@ -166,20 +130,16 @@ namespace ImageResizer.Services
                 List<ImageData> tmpImageDataToUploadList = new List<ImageData>();
                 foreach (var imageName in absentFromDb)
                 { //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
-                  //
+               
                     tmpImageDataToUploadList.Add(GetImageProperties(service, imageName,container));
-                    //todo:ladowanie do pamieci lista obiektow po skonczonej petli duze zapytanie bulk do bazy danych ewentualny iterator i paczki np po 100 rekordow 
-                    //
                     if (iterator % 100 == 0)
                     {
-                        InsertMultipleImagesData(tmpImageDataToUploadList);
+                        SaveImagesData(tmpImageDataToUploadList);
                         tmpImageDataToUploadList = new List<ImageData>();
                     }
-                   
                     iterator++;
                 }
-                InsertMultipleImagesData(tmpImageDataToUploadList);
-                tmpImageDataToUploadList = new List<ImageData>();
+                SaveImagesData(tmpImageDataToUploadList);
             }
         }
     }

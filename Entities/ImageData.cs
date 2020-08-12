@@ -2,14 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ServiceStack.Model;
 
 namespace ImageResizer.Entities
 {
     [CompositeIndex(true, nameof(ImageName), nameof(ClientContainer))]
-    public class ImageData
+    public class ImageData: IHasLongId
     {
         [AutoIncrement]
-        public int Id { get; set; }
+        [PrimaryKey]
+        public long Id { get; set; }
+
         [Required]
         public string ImageName { get; set; }
         [Required]
