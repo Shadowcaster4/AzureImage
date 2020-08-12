@@ -14,6 +14,7 @@ using System.Data.SQLite;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ImageResizer.Utilities;
 
 namespace ImageResizer
 {
@@ -28,12 +29,13 @@ namespace ImageResizer
             
             try
             {
+                
                 var resp = new HttpResponseMessage();
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                 resp.StatusCode = HttpStatusCode.Forbidden;
-                
-                IDatabaseService databaseService =new DatabaseService("");
+
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
 
                 if (!service.SetServiceContainer(req.Form["container"]))
                 {
@@ -45,16 +47,15 @@ namespace ImageResizer
                 switch (req.Form["objectToDelete"])
                 {
                     case "container":
-                        if (service.GetImageSecurityHash(req.Form["container"], Environment.GetEnvironmentVariable("ContainerRemoveKey")) != req.Form["secKey"])
+                        if (service.GetImageSecurityHash(req.Form["container"], Utilities.Utilities.ContainerRemoveKey) != req.Form["secKey"])
                             break;
                         if (service.CheckIfContainerExists(req.Form["container"]))
                         {
                             service.DeleteClientContainer(req.Form["container"]);
+                            databaseService.DeleteClientContainer(req.Form["container"]);
+
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");
-                              
-                            databaseService.dbConnection2.Execute($"DROP TABLE {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}");
-                            databaseService.dbConnection2.Dispose();
                         }
                         else
                         {                            
@@ -68,12 +69,10 @@ namespace ImageResizer
                             break;
                        
                         if(service.DeleteImageDirectory(req.Form["imageName"]))
-                        {
-                        resp.StatusCode = HttpStatusCode.OK;
-                        resp.Content = new StringContent("Requested directory is gone");
-                        
-                        databaseService.dbConnection2.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + req.Form["container"]}   where imageName='{req.Form["imageName"]}'");
-                        databaseService.dbConnection2.Dispose();
+                        { 
+                            databaseService.DeleteImages(req.Form["imageName"], req.Form["container"]);
+                            resp.StatusCode = HttpStatusCode.OK;
+                            resp.Content = new StringContent("Requested directory is gone");
                         }
                         else
                         {
@@ -107,14 +106,15 @@ namespace ImageResizer
 
                         if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection2))
                         {
+                            databaseService.DeleteLetterDirectory(req.Form["imageName"], req.Form["container"]);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested letter directory is gone");
-                            databaseService.dbConnection2.Dispose();
+                        
                         }
                         else
                         {
                             resp.StatusCode = HttpStatusCode.NotFound;
-                            resp.Content = new StringContent("Requested letter directory doesnt exists");
+                            resp.Content = new StringContent("Requested letter directory doesn't exists");
                         }
                         break;
                     default:

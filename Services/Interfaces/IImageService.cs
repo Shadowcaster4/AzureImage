@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using ImageResizer.Database;
 
 namespace ImageResizer.Services.Interfaces
 {
@@ -16,7 +17,7 @@ namespace ImageResizer.Services.Interfaces
         bool CheckIfContainerNameIsValid(string containerName);
         bool CheckIfImageExists(string imagePath);
         bool CheckIfParametersAreInRange(int width, int height);
-        bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection);
+        bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, ImageData imageData);
         bool CreateUsersContainer(string clientContainerName);
         bool DeleteCachedImage(string imagePath);
         bool DeleteClientContainer(string clientContainerName);
@@ -37,7 +38,7 @@ namespace ImageResizer.Services.Interfaces
         bool SaveImage(MemoryStream imageToSave, string imagePath);
         bool SetImageObject(string imagePath);
         bool SetServiceContainer(string containerName);
-        bool UploadImage(Stream image, string userContainerName, string imagePath, IDbConnection dbConnection);
+        bool UploadImage(Stream image, string userContainerName, string imagePath, IDatabaseService dbService);
 
         string Test(string fileName);
     }

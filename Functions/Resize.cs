@@ -74,12 +74,18 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-                IDatabaseService databaseService = new DatabaseService(""); 
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
+                var imageData = databaseService.GetImageData(image, clientHash);
                                
-                    flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(clientHash, image, requestedParameters.Width, requestedParameters.Height, databaseService.dbConnection2);
-                databaseService.dbConnection2.Dispose();                         
+                    flagIsInOryginalImageRange = 
+                        service.CheckIfImageRequestedImageResolutionIsInRange(
+                            clientHash,
+                            image, 
+                            requestedParameters.Width, 
+                            requestedParameters.Height, 
+                            imageData);
 
-                //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
+                    //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
                 if (!(flagIsInOryginalImageRange))
                 {
                     if(!requestedParameters.WatermarkPresence)

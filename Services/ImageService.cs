@@ -19,6 +19,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using ImageResizer.Database;
+using ImageResizer.Functions;
 
 namespace ImageResizer.Services
 {
@@ -163,7 +165,22 @@ namespace ImageResizer.Services
             return flag;
         }
 
-        public bool UploadImage(Stream image, string userContainerName, string imagePath,IDbConnection dbConnection)
+        public ImageData GetImageProperties(Stream imageStream, string imageName, string container)
+        {
+            imageStream.Position = 0;
+            Size imageSize = GetFileResolution.GetDimensions(new BinaryReader(imageStream));
+
+            return new ImageData()
+            {
+                ImageName = Path.GetFileName(imageName),
+                ClientContainer = container,
+                Width = imageSize.Width,
+                Height = imageSize.Height,
+                Size = imageStream.Length.ToString()
+            };
+        }
+
+        public bool UploadImage(Stream image, string userContainerName, string imagePath, IDatabaseService dbService)
         {
             if (!SetServiceContainer(userContainerName))
             {
@@ -173,30 +190,23 @@ namespace ImageResizer.Services
 
             if (CheckIfImageExists(imagePath))
                 return false;
-                        
-            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(image);
-            ImageData imageData = new ImageData()
-            {
-                ImageName = imagePath.Substring(imagePath.LastIndexOf('/')+1),
-                Width = imageObjCreatedForGettingImageData.Width,
-                Height = imageObjCreatedForGettingImageData.Height,
-                Size = image.Length.ToString()
-            };
+
+            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), userContainerName);
+
+
 
             image.Position = 0;
             blobContainerClient.UploadBlob(imagePath, image);
 
-            dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
+            dbService.SaveImagesData(new List<ImageData>() { imageData });
            
-            imageObjCreatedForGettingImageData.Dispose();
             image.Dispose();
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName,string imageName, int width, int height, IDbConnection dbConnection)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, ImageData imageData)
         {
-            ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
-            return width > imageData.Width && height > imageData.Height ? false : true;
+            return width <= imageData.Width || height <= imageData.Height;
         }
 
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)

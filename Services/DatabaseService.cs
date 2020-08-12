@@ -32,6 +32,8 @@ namespace ImageResizer.Services
                if(CheckIfDbFileExist(DbConnString))
                {
                     DbConnection = SetDbConnection(DbConnString);
+                    IImageService service =
+                        Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                }
                else
                {               
@@ -69,6 +71,41 @@ namespace ImageResizer.Services
         public bool CheckIfDbFileExist(string databasePath)
         {
             return File.Exists(GetDbFilePathFromConnString(databasePath));
+        }
+
+
+        public void DeleteClientContainer(string container)
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.Delete<ImageData>(x => x.ClientContainer == container);
+            }
+        }
+
+        public void DeleteImages(string imageName,string container)
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.Delete<ImageData>(x => x.ImageName == imageName && x.ClientContainer==container);
+            }
+        }
+
+        public void DeleteLetterDirectory(string imageName, string container)
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.Delete<ImageData>(x => x.ImageName.StartsWith(imageName[0]) && x.ClientContainer == container);
+            }
+        }
+
+        public ImageData GetImageData(string imageName, string container)
+        {
+            using (var db = DbConnection.Open())
+            {
+              //  return db.Select<ImageData>(x => x.ImageName == imageName).First(); //&& x.ClientContainer == container);
+              return db.Single<ImageData>(x=>x.ClientContainer==container && x.ImageName==imageName);
+              
+            }
         }
 
         public void CheckAndRestoreData(IImageService service)

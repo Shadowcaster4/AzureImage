@@ -15,6 +15,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using ImageResizer.Database;
+using ImageResizer.Functions;
 
 namespace ImageResizer.Services.Interfaces
 {
@@ -131,22 +133,31 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection)
         {
-            bool flag = false;
-
             Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
             GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
-
-            foreach (var baseImage in myBaseImagesDictionary.Where(x => x.Key.Contains($@"\{fileName[0]}")))
-            {
-                dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + containerClient.Name}   where imageName='{Path.GetFileName(baseImage.Key)}'");
-                flag = true;
-            }
-
+            
             Directory.Delete(containerClient.FullName + "\\" + fileName[0], true);
-            return flag;
+            return true;
         }
 
-        public bool UploadImage(Stream image, string userContainerName, string imagePath, IDbConnection dbConnection)
+
+
+        public ImageData GetImageProperties(Stream imageStream,string imageName, string container)
+        {
+            imageStream.Position = 0;
+            Size imageSize = GetFileResolution.GetDimensions(new BinaryReader(imageStream));
+
+            return new ImageData()
+            {
+                ImageName = Path.GetFileName(imageName),
+                ClientContainer = container,
+                Width = imageSize.Width,
+                Height = imageSize.Height,
+                Size = imageStream.Length.ToString()
+            };
+        }
+
+        public bool UploadImage(Stream image, string userContainerName, string imagePath, IDatabaseService dbService)
         {
             if (!SetServiceContainer(userContainerName))
             {
@@ -157,14 +168,7 @@ namespace ImageResizer.Services.Interfaces
             if (CheckIfImageExists(imagePath))
                 return false;
 
-            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(image);
-            ImageData imageData = new ImageData()
-            {
-                ImageName = imagePath.Substring(imagePath.LastIndexOf('\\') + 1),
-                Width = imageObjCreatedForGettingImageData.Width,
-                Height = imageObjCreatedForGettingImageData.Height,
-                Size = image.Length.ToString()
-            };
+            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), userContainerName);
 
             image.Position = 0;
 
@@ -178,17 +182,15 @@ namespace ImageResizer.Services.Interfaces
                 uploadImage.Dispose();
             }
 
-            dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
+            dbService.SaveImagesData(new List<ImageData>(){imageData});
 
-            imageObjCreatedForGettingImageData.Dispose();
             image.Dispose();
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height,ImageData imageData)
         {
-            ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
-            return width <= imageData.Width || height <= imageData.Height;
+               return width <= imageData.Width || height <= imageData.Height;
         }
 
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)
