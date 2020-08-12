@@ -29,176 +29,11 @@ namespace ImageResizer.Services.Interfaces
         {
             serviceClient = new DirectoryInfo(_applicationConnectionString);
         }
-        
 
+        #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
-            return Directory.Exists(serviceClient.FullName + "\\" + containerName);          
-        }      
-
-        public bool CheckIfImageExists(string imagePath)
-        {
-            return File.Exists(containerClient.FullName + "\\" + imagePath);          
-        }
-
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection)
-        {
-            ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
-            return width <= imageData.Width || height <= imageData.Height;
-        }
-
-        public bool CreateUsersContainer(string clientContainerName)
-        {
-            if (CheckIfContainerExists(clientContainerName))
-                return false;
-            serviceClient.CreateSubdirectory(clientContainerName);         
-            return true;
-        }
-
-        public bool DeleteCachedImage(string imagePath)
-        {
-            if (SetImageObject(imagePath))
-            {
-                string path = containerClient.FullName + "\\" + imagePath;
-                path = path.Substring(0, path.LastIndexOf("\\"));
-                Directory.Delete(Path.GetFullPath(path), true);                           
-                return true;
-            }
-            return false;
-        }
-
-        public bool DeleteClientContainer(string clientContainerName)
-        {
-            try
-            {
-                containerClient.Delete(true);
-                return true;
-            }
-            catch(Exception)
-            {
-                return false;
-            }
-          
-        }
-
-        public bool DeleteImageDirectory(string directoryName)
-        {
-            if (File.Exists(containerClient.FullName + "\\" + GetImagePathUpload(directoryName)))
-            {
-                string directoryPath = containerClient.FullName + "\\" + GetImagePathUpload(directoryName);
-                directoryPath = directoryPath.Substring(0, directoryPath.LastIndexOf("\\"));
-                Directory.Delete(directoryPath, true);
-                return true;
-            }
-            return false;           
-        }
-
-        public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection)
-        {           
-            bool flag = false;
-
-            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
-            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
-
-            foreach(var baseImage in myBaseImagesDictionary.Where(x=>x.Key.Contains($@"\{fileName[0]}")))
-            {
-                dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + containerClient.Name}   where imageName='{Path.GetFileName(baseImage.Key)}'");
-                flag = true;
-            }
-        
-            Directory.Delete(containerClient.FullName + "\\" + fileName[0],true);
-            return flag;
-        }
-
-
-        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
-        {
-            if (!containerClient.Exists)
-                throw new Exception("Blob container is not set");                     
-           
-            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string,LocalFileInfo>();
-
-            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
-            return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
-        }
-
-        public List<string> GetBlobContainers()
-        {
-            return serviceClient.GetDirectories().Select(x=>x.Name).ToList();
-        }
-
-        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int deepth)
-        {
-            string[] subDirs = Directory.GetDirectories(startLocation);
-
-            if (deepth == 0)
-            {
-                string[] files = Directory.GetFiles(startLocation, "*.*");
-                foreach (string file in files)
-                {
-                    FileInfo tmpFile = new FileInfo(Path.GetFullPath(file));
-                    myFiles.Add(file, new LocalFileInfo(tmpFile.Name, tmpFile.Length, tmpFile.CreationTime));
-                }
-                return myFiles;
-            }
-
-            foreach (string dir in subDirs)
-            {
-                GetLocalFiles(myFiles, dir, deepth - 1);
-            }
-            return myFiles;
-        }
-
-        public Dictionary<string, DateTime> GetCachedImagesDictionary()
-        {
-            Dictionary<string, LocalFileInfo> cachedImages =new Dictionary<string, LocalFileInfo>();
-
-            GetLocalFiles(cachedImages, containerClient.FullName, 3);
-
-            return  cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
-        }
-
-      
-        public string Test(string fileName)
-        {            
-            return fileName;
-        }
-
-
-        public string GetImagePathResize(QueryParameterValues parameters, string fileName)
-        {
-            if (parameters.WatermarkPresence)
-                return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "\\" + fileName;
-
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "\\" + fileName;
-        }
-
-        public string GetImagePathUpload(string fileName)
-        {
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;            
-        }
-
-        public Dictionary<string, long> GetImagesDictionarySize()
-        {
-            if (!containerClient.Exists)
-                throw new Exception("Blob container is not set");
-           
-            Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
-
-            var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories);
-
-            foreach(var file in myContainerFiles)
-            {
-                imagesDictionary.Add(file.Name, file.Length);
-            }         
-
-            return imagesDictionary;
-        }
-             
-
-        public bool SetImageObject(string imagePath)
-        {
-            return CheckIfImageExists(imagePath);          
+            return Directory.Exists(serviceClient.FullName + "\\" + containerName);
         }
 
         public bool SetServiceContainer(string containerName)
@@ -211,7 +46,104 @@ namespace ImageResizer.Services.Interfaces
                 containerClient = new DirectoryInfo(serviceClient.FullName + "\\" + containerName);
                 return true;
             }
-            return false;           
+            return false;
+        }
+
+        public List<string> GetBlobContainers()
+        {
+            return serviceClient.GetDirectories().Select(x => x.Name).ToList();
+        }
+
+        public bool DeleteClientContainer(string clientContainerName)
+        {
+            try
+            {
+                containerClient.Delete(true);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+        }
+
+        public bool CreateUsersContainer(string clientContainerName)
+        {
+            if (CheckIfContainerExists(clientContainerName))
+                return false;
+            serviceClient.CreateSubdirectory(clientContainerName);
+            return true;
+        }
+        #endregion
+        #region Image Blobs Methods
+
+        public bool CheckIfImageExists(string imagePath)
+        {
+            return File.Exists(containerClient.FullName + "\\" + imagePath);
+        }
+
+        public bool SetImageObject(string imagePath)
+        {
+            return CheckIfImageExists(imagePath);
+        }
+
+        public Dictionary<string, long> GetImagesDictionarySize()
+        {
+            if (!containerClient.Exists)
+                throw new Exception("Blob container is not set");
+
+            Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
+
+            var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories);
+
+            foreach (var file in myContainerFiles)
+            {
+                imagesDictionary.Add(file.Name, file.Length);
+            }
+
+            return imagesDictionary;
+        }
+
+        public bool DeleteCachedImage(string imagePath)
+        {
+            if (SetImageObject(imagePath))
+            {
+                string path = containerClient.FullName + "\\" + imagePath;
+                path = path.Substring(0, path.LastIndexOf("\\"));
+                Directory.Delete(Path.GetFullPath(path), true);
+                return true;
+            }
+            return false;
+        }
+
+        public bool DeleteImageDirectory(string directoryName)
+        {
+            if (File.Exists(containerClient.FullName + "\\" + GetImagePathUpload(directoryName)))
+            {
+                string directoryPath = containerClient.FullName + "\\" + GetImagePathUpload(directoryName);
+                directoryPath = directoryPath.Substring(0, directoryPath.LastIndexOf("\\"));
+                Directory.Delete(directoryPath, true);
+                return true;
+            }
+            return false;
+        }
+
+        public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection)
+        {
+            bool flag = false;
+
+            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
+            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
+
+            foreach (var baseImage in myBaseImagesDictionary.Where(x => x.Key.Contains($@"\{fileName[0]}")))
+            {
+                dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + containerClient.Name}   where imageName='{Path.GetFileName(baseImage.Key)}'");
+                flag = true;
+            }
+
+            Directory.Delete(containerClient.FullName + "\\" + fileName[0], true);
+            return flag;
         }
 
         public bool UploadImage(Stream image, string userContainerName, string imagePath, IDbConnection dbConnection)
@@ -244,7 +176,7 @@ namespace ImageResizer.Services.Interfaces
                 image.CopyTo(tmpStream);
                 tmpStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
-            }            
+            }
 
             dbConnection.Execute($"insert into {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} (imageName,width,height,size) values (@imageName,@width,@height,@size)", imageData);
 
@@ -253,6 +185,68 @@ namespace ImageResizer.Services.Interfaces
             return true;
         }
 
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, IDbConnection dbConnection)
+        {
+            ImageData imageData = dbConnection.Query<ImageData>($"select * from {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + userContainerName} where imageName='{imageName}' ", new DynamicParameters()).FirstOrDefault();
+            return width <= imageData.Width || height <= imageData.Height;
+        }
+
+        public string GetImagePathResize(QueryParameterValues parameters, string fileName)
+        {
+            if (parameters.WatermarkPresence)
+                return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "\\" + fileName;
+
+            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "\\" + fileName;
+        }
+
+        public string GetImagePathUpload(string fileName)
+        {
+            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
+        }
+
+        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
+        {
+            if (!containerClient.Exists)
+                throw new Exception("Blob container is not set");
+
+            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
+
+            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
+            return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
+        }
+
+        public Dictionary<string, DateTime> GetCachedImagesDictionary()
+        {
+            Dictionary<string, LocalFileInfo> cachedImages = new Dictionary<string, LocalFileInfo>();
+
+            GetLocalFiles(cachedImages, containerClient.FullName, 3);
+
+            return cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
+        }
+
+
+        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int deepth)
+        {
+            string[] subDirs = Directory.GetDirectories(startLocation);
+
+            if (deepth == 0)
+            {
+                string[] files = Directory.GetFiles(startLocation, "*.*");
+                foreach (string file in files)
+                {
+                    FileInfo tmpFile = new FileInfo(Path.GetFullPath(file));
+                    myFiles.Add(file, new LocalFileInfo(tmpFile.Name, tmpFile.Length, tmpFile.CreationTime));
+                }
+                return myFiles;
+            }
+
+            foreach (string dir in subDirs)
+            {
+                GetLocalFiles(myFiles, dir, deepth - 1);
+            }
+            return myFiles;
+        }
+        #endregion
         #region Resize Methods
         public MemoryStream DownloadImageFromStorageToStream(string imagePath)
         {
@@ -398,7 +392,12 @@ namespace ImageResizer.Services.Interfaces
             return HashMyString(container + imageName + imageSize);
         }
 
-       
+
         #endregion
+
+        public string Test(string fileName)
+        {
+            return fileName;
+        }
     }
 }

@@ -14,6 +14,9 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using ImageResizer.Functions;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace ImageResizer.Services
 {
@@ -22,8 +25,6 @@ namespace ImageResizer.Services
         public IDbConnection dbConnection2 { get; }
         private  OrmLiteConnectionFactory DbConnection { get; }
         private string DbConnString { get;}
-
-
 
         public DatabaseService(string dbConnString)
         {
@@ -72,37 +73,53 @@ namespace ImageResizer.Services
 
         public void CheckAndRestoreData(IImageService service)
         {
-            //todo:parallel tutaj 
             CreateTableIfNotExists();
+            //todo:parallel tutaj 
+            /*
+           
+            Parallel.ForEach(service.GetBlobContainers(), container =>
+            {
+                RestoreDataForContainer(service, container);
+            });
+            */
+
             foreach (string container in service.GetBlobContainers())
             {
                 RestoreDataForContainer(service, container);
             }
+            
         }
 
         public bool CreateTableIfNotExists()
         {
-            return DbConnection.Open().CreateTableIfNotExists<ImageData>();
+            using (var db = DbConnection.Open())
+            {
+                return db.CreateTableIfNotExists<ImageData>();
+            }
+     
         }
 
         public ImageData GetImageProperties(IImageService service,string imageName,string container)
         {
-            MemoryStream openImage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imageName));
+            MemoryStream openImage = service.DownloadImageFromStorageToStream(
+                service.GetImagePathUpload(imageName));
             openImage.Position = 0;
-            Image<Rgba32> imageObjCreatedForGettingImageData = (Image<Rgba32>)Image.Load(openImage);
+
+            Size imageSize = GetFileResolution.GetDimensions(new BinaryReader(openImage));
+
             ImageData imageData = new ImageData()
-            {
+            { 
                 ImageName = Path.GetFileName(imageName),
                 ClientContainer = container,
-                Width = imageObjCreatedForGettingImageData.Width,
-                Height = imageObjCreatedForGettingImageData.Height,
+                Width = imageSize.Width,
+                Height = imageSize.Height,
                 Size = openImage.Length.ToString()
             };
-            imageObjCreatedForGettingImageData.Dispose();
+            openImage.Dispose();
             return imageData;
         }
 
-    
+       
 
         public void SaveImagesData(List<ImageData> imageDataList)
         {
@@ -132,7 +149,7 @@ namespace ImageResizer.Services
                 { //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
                
                     tmpImageDataToUploadList.Add(GetImageProperties(service, imageName,container));
-                    if (iterator % 100 == 0)
+                    if (iterator % 200 == 0)
                     {
                         SaveImagesData(tmpImageDataToUploadList);
                         tmpImageDataToUploadList = new List<ImageData>();

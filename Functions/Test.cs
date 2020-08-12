@@ -93,7 +93,7 @@ namespace ImageResizer.Functions
                      
         
 
-        
+
             //dbImagesList = dbImagesList.Select(x => x.ToString());
 
             return new OkObjectResult("xD");

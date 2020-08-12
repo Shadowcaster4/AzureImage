@@ -34,11 +34,8 @@ namespace ImageResizer
 
             try
             {
-                IImageService service;
-                if (Environment.GetEnvironmentVariable("ApplicationEnvironment") == "Local")
-                    service = new ImageServiceLocally();
-                else
-                    service = new ImageService();
+                IImageService service =
+                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                 var requestedParameters = new QueryParameterValues(parameters);
                 
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))
