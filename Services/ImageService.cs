@@ -39,6 +39,7 @@ namespace ImageResizer.Services
             blobServiceClient = new BlobServiceClient(base._applicationConnectionString);            
         }             
         
+        /*
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
@@ -378,19 +379,7 @@ namespace ImageResizer.Services
                 _ => "notsupported"
 
             };
-            /*
-
-            if (fileName.EndsWith(".png"))
-                return "png";
-            if (fileName.EndsWith(".jpg"))
-                return "jpeg";
-            if (fileName.EndsWith(".jpeg"))
-                return "jpeg";
-            if (fileName.EndsWith(".gif"))
-                return "gif";
-
-            return "not-supported";
-            */
+           
         }
 
         public bool CheckIfParametersAreInRange(int width, int height)
@@ -428,6 +417,147 @@ namespace ImageResizer.Services
            // var x = directoryContainerClient.FullName;
             var x = fileName;
             return x;
+        }
+        */
+        public bool ChceckIfFileIsSupported(string fileName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfContainerExists(string containerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfContainerNameIsValid(string containerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfImageExists(string imagePath, string clientContainerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfParametersAreInRange(int width, int height)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CreateUsersContainer(IContainerService clientContainer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DeleteCachedImage(string imagePath, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DeleteClientContainer(IContainerService clientContainer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DeleteImageDirectory(string directoryName, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MemoryStream DownloadImageFromStorageToStream(string imagePath, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<string> GetBlobContainers()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetImagePathResize(QueryParameterValues parameters, string fileName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetImagePathUpload(string fileName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetImageExtension(string fileName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetImageSecurityHash(string container, string imageName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetUploadImageSecurityKey(string container, string imageName, string imageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IImageEncoder GetImageEncoder(string fileFormat)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int heigth,
+            bool padding, string fileFormat, bool watermark)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SetImageObject(string imagePath, string clientContainerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SetServiceContainer(string containerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Test(string fileName)
+        {
+            throw new NotImplementedException();
         }
     }
 }

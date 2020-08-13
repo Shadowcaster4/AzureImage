@@ -46,7 +46,7 @@ namespace ImageResizer.Services.Interfaces
 
             if (CheckIfContainerExists(containerName))
             {
-                containerClient = new DirectoryInfo(GetContainerPath(containerName));
+               // containerClient = new DirectoryInfo(GetContainerPath(containerName));
                 return true;
             }
             return false;
@@ -305,7 +305,7 @@ namespace ImageResizer.Services.Interfaces
             };
         }
                 
-        public MemoryStream MutateImage(MemoryStream imageFromStorage,IContainerService container , int width, int heigth, bool padding, string fileFormat, bool watermark)
+        public MemoryStream MutateImage(MemoryStream imageFromStorage,IContainerService container , int width, int height, bool padding, string fileFormat, bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
            
@@ -323,12 +323,12 @@ namespace ImageResizer.Services.Interfaces
                 watermarkStream.Dispose();
             }
 
-            if (width > 0 && heigth > 0)
+            if (width > 0 && height > 0)
             {
                 image.Mutate(x => x.Resize(new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(width, heigth)
+                    Size = new Size(width, height)
                 }));
             }
 
@@ -343,7 +343,7 @@ namespace ImageResizer.Services.Interfaces
                     image = whiteBackgroundForPngImage;
                 }
 
-                Image<Rgba32> imageContainer = new Image<Rgba32>(width, heigth, Color.FromRgb(255, 0, 0));
+                Image<Rgba32> imageContainer = new Image<Rgba32>(width, height, Color.FromRgb(255, 0, 0));
                 if (image.Width < imageContainer.Width)
                     imageContainer.Mutate(x => x.DrawImage(image, new Point((imageContainer.Width / 2) - (image.Width / 2), 0), 1.0f));
                 if (image.Height < imageContainer.Height)
@@ -355,8 +355,9 @@ namespace ImageResizer.Services.Interfaces
             image.Dispose();
             return output;
         }
-        public bool SaveImage(MemoryStream imageToSave, string imagePath)
+        public bool SaveImage(MemoryStream imageToSave, string imagePath,IContainerService container)
         {
+            var containerClient = GetServiceContainer(container.GetContainerName());
             if (!containerClient.Exists)
                 return false;
             imageToSave.Position = 0;
