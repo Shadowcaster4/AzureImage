@@ -33,8 +33,8 @@ namespace ImageResizer.Services
                if(CheckIfDbFileExist(DbConnString))
                {
                     DbConnection = SetDbConnection(DbConnString);
-                    IImageService service =
-                        Utilities.Utilities.GetImageService("Local");
+                 //   IImageService service =
+                 //       Utilities.Utilities.GetImageService("Local");
                }
                else
                {               
@@ -113,18 +113,19 @@ namespace ImageResizer.Services
         {
             CreateTableIfNotExists();
             //todo:parallel tutaj 
-            /*
+            
            
             Parallel.ForEach(service.GetBlobContainers(), container =>
             {
-                RestoreDataForContainer(service, container);
+                RestoreDataForContainer(service, new ContainerClass(container));
             });
-            */
-
+            
+            /*
             foreach (string container in service.GetBlobContainers())
             {
                 RestoreDataForContainer(service,new ContainerClass(container)); 
             }
+            */
             
         }
 

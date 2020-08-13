@@ -14,6 +14,7 @@ using System.Data.SQLite;
 using System.Linq;
 using ImageResizer.Services.Interfaces;
 using System.Collections.Generic;
+using System.Diagnostics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using ImageResizer.Services;
@@ -89,14 +90,16 @@ namespace ImageResizer.Functions
 
             // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
 
+            var watch = new Stopwatch();
+            watch.Start();
             IDatabaseService databaseService = new DatabaseService(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
-                     
+            watch.Stop();         
         
 
 
             //dbImagesList = dbImagesList.Select(x => x.ToString());
 
-            return new OkObjectResult("xD");
+            return new OkObjectResult(watch.ElapsedMilliseconds);
         }
     }
 }

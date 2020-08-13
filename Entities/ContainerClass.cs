@@ -6,8 +6,8 @@ using ImageResizer.Services.Interfaces;
 using ServiceStack;
 
 namespace ImageResizer.Entities
-{
-    class ContainerClass:IContainerService
+{ 
+    public class ContainerClass:IContainerService
     {
         private string ContainerName;
   

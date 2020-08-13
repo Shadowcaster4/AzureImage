@@ -145,6 +145,7 @@ namespace ImageResizer
                         requestedParameters.Padding,
                         imageExtension,
                         requestedParameters.WatermarkPresence);
+
                     service.SaveImage(mutadedImage, imagePath,containerService);
 
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -162,18 +163,18 @@ namespace ImageResizer
                     return response;
 
                 }
-
-                resp.StatusCode = HttpStatusCode.NotFound;
-                return resp;
+                
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.NotFound, "");
 
             }
             catch (Exception e)
             {
                 log.LogInformation(e.Message);
-                resp.StatusCode = HttpStatusCode.BadRequest;
-                resp.Content = new StringContent("Something went wrong" );
-                return resp;
                
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.BadRequest, "Something went wrong");
+
             }
             
         }
