@@ -74,15 +74,7 @@ namespace ImageResizer.Functions
             }
             return BitConverter.ToInt32(bytes, 0);
         }
-        /*
-        private static Size DecodeBitmap(BinaryReader binaryReader)
-        {
-            binaryReader.ReadBytes(16);
-            int width = binaryReader.ReadInt32();
-            int height = binaryReader.ReadInt32();
-            return new Size(width, height);
-        }
-        */
+      
         private static Size DecodeGif(BinaryReader binaryReader)
         {
             int width = binaryReader.ReadInt16();
@@ -125,19 +117,7 @@ namespace ImageResizer.Functions
 
             throw new ArgumentException(errorMessage);
         }
-        /*
-        private static Size DecodeWebP(BinaryReader binaryReader)
-        {
-            binaryReader.ReadUInt32(); // Size
-            binaryReader.ReadBytes(15); // WEBP, VP8 + more
-            binaryReader.ReadBytes(3); // SYNC
-
-            var width = binaryReader.ReadUInt16() & 0b00_11111111111111; // 14 bits width
-            var height = binaryReader.ReadUInt16() & 0b00_11111111111111; // 14 bits height
-
-            return new Size(width, height);
-        }
-        */
+     
 
     }
 }

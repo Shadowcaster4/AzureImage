@@ -23,7 +23,7 @@ namespace ImageResizer.Services
 {
     public class DatabaseService:IDatabaseService
     {
-        public IDbConnection dbConnection2 { get; }
+        
         private  OrmLiteConnectionFactory DbConnection { get; }
         private string DbConnString { get;}
         private IImageService service;
@@ -36,20 +36,20 @@ namespace ImageResizer.Services
                     DbConnection = SetDbConnection(DbConnString);
                     service =
                         Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                    RestoreData(service);
+                    CheckAndCorrectDbData(service);
                }
                else
                {               
               
                    CreateDatabase(dbConnString);
-               DbConnection = SetDbConnection(DbConnString);
+                   DbConnection = SetDbConnection(DbConnString);
                    service =
                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
-               CheckAndRestoreData(service);
+               RestoreData(service);
         
                }
-
-           
         }
 
         private OrmLiteConnectionFactory SetDbConnection(string dbConnString)
@@ -84,11 +84,19 @@ namespace ImageResizer.Services
             }
         }
 
-        public void DeleteImages(string imageName, IContainerService container)
+        public void DeleteImage(string imageName, IContainerService container)
         {
             using (var db = DbConnection.Open())
             {
-                db.Delete<ImageData>(x => x.ImageName == imageName && x.ClientContainer==container.GetContainerName());
+              db.Delete<ImageData>(x => x.ImageName == imageName && x.ClientContainer==container.GetContainerName());
+            }
+        }
+
+        public void DeleteImages(IEnumerable<ImageData> imagesToDelete)
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.DeleteAll<ImageData>(imagesToDelete);
             }
         }
 
@@ -110,15 +118,14 @@ namespace ImageResizer.Services
             }
         }
 
-        public void CheckAndRestoreData(IImageService service)
+        public void RestoreData(IImageService imageService)
         {
             CreateTableIfNotExists();
-            //todo:parallel tutaj 
-            
            
-            Parallel.ForEach(service.GetBlobContainers(), container =>
+           
+            Parallel.ForEach(imageService.GetBlobContainers(), container =>
             {
-                RestoreDataForContainer(service, new ContainerClass(container));
+                RestoreDataForContainer(imageService, new ContainerClass(container));
             });
             
             /*
@@ -130,6 +137,13 @@ namespace ImageResizer.Services
             */
         }
 
+        public void CheckAndCorrectDbData(IImageService imageService)
+        {
+            Parallel.ForEach(imageService.GetBlobContainers(), container =>
+            {
+                CompareAndCorrectDbDataWithStorageImages(imageService, new ContainerClass(container));
+            });
+        }
         
 
         public bool CreateTableIfNotExists()
@@ -162,7 +176,16 @@ namespace ImageResizer.Services
             return imageData;
         }
 
-       
+
+        public void CompareAndCorrectDbDataWithStorageImages(IImageService imageService, IContainerService container)
+        {
+            var dbImagesList = GetContainerImagesDataFromDb(container);
+            var storageImages = imageService.GetBaseImagesDictionary(container);
+            IEnumerable<ImageData> absentFromStorage = dbImagesList.Where(x => !storageImages.ContainsKey(x.ImageName));
+
+            DeleteImages(absentFromStorage);
+            
+        }
 
         public void SaveImagesData(List<ImageData> imageDataList)
         {
@@ -172,16 +195,20 @@ namespace ImageResizer.Services
             }
         }
 
-        public void RestoreDataForContainer(IImageService service, IContainerService container)
+        public List<ImageData> GetContainerImagesDataFromDb(IContainerService container)
         {
-            //todo: interfejs  kontener klienta - musi posiadac metode tabela w bazie danych //todo:orm
-            var dbImagesList = DbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container.GetContainerName());
+            using (var db = DbConnection.Open())
+            {
+                return DbConnection.Open().Select<ImageData>(x => x.ClientContainer == container.GetContainerName());
+            }
+        }
 
-            //todo: wywalic setservicecontainer
-            //service.SetServiceContainer(container);
-            var storageImages = service.GetBaseImagesDictionary(new ContainerClass(container.GetContainerName()));
-            //todo:  storageImages // imagesinstorage
-            //todo:  odwrotna sytaucja plik jest w bazie nie ma go na dysku 
+        //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
+        public void RestoreDataForContainer(IImageService imageService, IContainerService container)
+        {
+            var dbImagesList = GetContainerImagesDataFromDb(container);
+            var storageImages = imageService.GetBaseImagesDictionary(container);
+            
             List<string> absentFromDb = storageImages.Keys.Except(dbImagesList.Select(x => x.ImageName)).ToList();
 
             if (absentFromDb.Any())
@@ -189,10 +216,9 @@ namespace ImageResizer.Services
                 int iterator = 1;
                 List<ImageData> tmpImageDataToUploadList = new List<ImageData>();
                 foreach (var imageName in absentFromDb)
-                { //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
-               
-                    tmpImageDataToUploadList.Add(GetImageProperties(service, imageName,container));
-                    if (iterator % 200 == 0)
+                {
+                    tmpImageDataToUploadList.Add(GetImageProperties(imageService, imageName,container));
+                    if (iterator % 300 == 0)
                     {
                         SaveImagesData(tmpImageDataToUploadList);
                         tmpImageDataToUploadList = new List<ImageData>();

@@ -92,7 +92,9 @@ namespace ImageResizer.Functions
 
             var watch = new Stopwatch();
             watch.Start();
+
             IDatabaseService databaseService = new DatabaseService(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
+            
             watch.Stop();         
         
 

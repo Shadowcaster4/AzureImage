@@ -34,9 +34,8 @@ namespace ImageResizer
             {
                 if(req.Form.Files.Count==0 || req.Form["container"] == string.Empty)
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("invalid request data");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "invalid request data");
                 }
 
                 IImageService service =
@@ -46,24 +45,23 @@ namespace ImageResizer
 
                 if (!service.CheckIfContainerNameIsValid(container))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("invalid container name");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "invalid container name");
                 }
 
                 for(int i=0;i<req.Form.Files.Count;i++)
                 {
                     if (!service.ChceckIfFileIsSupported(req.Form.Files[i].FileName))
                     {
-                        resp.StatusCode = HttpStatusCode.BadRequest;
-                        resp.Content = new StringContent("invalid image format");
-                        return resp;
+                        return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                            HttpStatusCode.BadRequest, "invalid image format");
                     }
 
                     if (service.GetUploadImageSecurityKey(container.GetContainerName(), req.Form.Files[i].FileName, req.Form.Files[i].Length.ToString()) != req.Form.Files[i].Name)
                     {
-                        resp.StatusCode = HttpStatusCode.Forbidden;
-                        return resp;
+                        return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                            HttpStatusCode.Forbidden, "");
+                      
                     }                    
                 }
 
@@ -92,16 +90,16 @@ namespace ImageResizer
                     resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     return resp;
                 }
-                resp.StatusCode = HttpStatusCode.Created;
-                resp.Content = new StringContent("Uploaded successfully");
-                return resp;
+
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.Created, "Uploaded successfully");
+
             }
             catch (Exception e)
             {
                 log.LogInformation(e.Message);
-                resp.StatusCode = HttpStatusCode.InternalServerError;
-                resp.Content = new StringContent("Something went wrong");
-                return resp;
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.InternalServerError, "Something went wrong");
             }
             
 

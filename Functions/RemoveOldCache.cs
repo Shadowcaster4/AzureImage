@@ -30,9 +30,8 @@ namespace ImageResizer
 
                 if (!service.CheckIfContainerExists(containerService))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Provided container is invalid");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
 
                 var cachedImagesDictionary = service.GetCachedImagesDictionary(containerService);
@@ -48,22 +47,21 @@ namespace ImageResizer
 
                 if (!flag)
                 {
-                    resp.StatusCode = HttpStatusCode.InternalServerError;
-                    resp.Content = new StringContent("Something went wrong not all files could be deleted");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.InternalServerError, "Something went wrong not all files could be deleted");
                 }
                 else
                 {
-                    resp.StatusCode = HttpStatusCode.OK;
-                    resp.Content = new StringContent("Old Cache was successfully removed");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.OK, "Old Cache was successfully removed");
                 }                 
 
             }
             catch (Exception e)
             {
                 log.LogInformation(e.Message);
-                return new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.InternalServerError, "");
             }
          
             

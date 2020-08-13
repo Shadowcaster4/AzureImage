@@ -42,9 +42,9 @@ namespace ImageResizer
 
                 if (!service.CheckIfContainerExists(containerService))
                 {
-                    resp.StatusCode = HttpStatusCode.NotFound;
-                    resp.Content = new StringContent("Provided container is invalid");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.NotFound, "Provided container is invalid");
+                    
                 }
 
                 switch (req.Form["objectToDelete"])
@@ -57,13 +57,13 @@ namespace ImageResizer
                             service.DeleteClientContainer(containerService);
                             databaseService.DeleteClientContainer(containerService);
 
-                            resp.StatusCode = HttpStatusCode.OK;
-                            resp.Content = new StringContent("User container is gone");
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.OK, "User container is gone");
                         }
                         else
-                        {                            
-                            resp.StatusCode = HttpStatusCode.NotFound;
-                            resp.Content = new StringContent("User container doesnt exists");
+                        {
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.NotFound, "User container doesnt exists");
                         }                           
                         break;
 
@@ -73,14 +73,14 @@ namespace ImageResizer
                        
                         if(service.DeleteImageDirectory(req.Form["imageName"],containerService))
                         { 
-                            databaseService.DeleteImages(req.Form["imageName"], containerService);
-                            resp.StatusCode = HttpStatusCode.OK;
-                            resp.Content = new StringContent("Requested directory is gone");
+                            databaseService.DeleteImage(req.Form["imageName"], containerService);
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.OK, "Requested directory is gone");
                         }
                         else
                         {
-                        resp.StatusCode = HttpStatusCode.NotFound;
-                        resp.Content = new StringContent("Requested directory doesnt exists");
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.NotFound, "Requested directory doesnt exists");
                         }
                         break;
                     case "singleImage":
@@ -94,13 +94,13 @@ namespace ImageResizer
 
                         if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"]),containerService))
                         {
-                            resp.StatusCode = HttpStatusCode.OK;
-                            resp.Content = new StringContent("Requested image is gone");
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.OK, "Requested image is gone");
                         }
                         else
                         {
-                        resp.StatusCode = HttpStatusCode.NotFound;
-                        resp.Content = new StringContent("Requested file doesnt exists");
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.NotFound, "Requested file doesnt exists");
                         }
                         break;
                     case "letterDirectory":
@@ -110,19 +110,18 @@ namespace ImageResizer
                         if (service.DeleteLetterDirectory(req.Form["imageName"],containerService))
                         {
                             databaseService.DeleteLetterDirectory(req.Form["imageName"], containerService);
-                            resp.StatusCode = HttpStatusCode.OK;
-                            resp.Content = new StringContent("Requested letter directory is gone");
-                        
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.OK, "Requested letter directory is gone");
                         }
                         else
                         {
-                            resp.StatusCode = HttpStatusCode.NotFound;
-                            resp.Content = new StringContent("Requested letter directory doesn't exists");
+                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                                HttpStatusCode.NotFound, "Requested letter directory doesn't exists");
                         }
                         break;
                     default:
-                        resp.StatusCode = HttpStatusCode.BadRequest; 
-                        resp.Content = new StringContent("Invalid objectToDelete option");
+                        return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                            HttpStatusCode.BadRequest, "Invalid objectToDelete option");
                         break;
 
                 }
