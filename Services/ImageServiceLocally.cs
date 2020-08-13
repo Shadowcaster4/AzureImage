@@ -165,10 +165,10 @@ namespace ImageResizer.Services.Interfaces
             return false;
         }
 
-        public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection,IContainerService container)
+        public bool DeleteLetterDirectory(string fileName, IContainerService container)
         {
-            Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
-            GetLocalFiles(myBaseImagesDictionary, container.GetContainerName(), 2);
+           // Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
+           // GetLocalFiles(myBaseImagesDictionary, GetContainerPath(container), 2);
             
             Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
             return true;

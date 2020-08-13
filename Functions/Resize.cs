@@ -38,34 +38,35 @@ namespace ImageResizer
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                 IContainerService containerService = new ContainerClass(clientHash);
 
+
                 var requestedParameters = new QueryParameterValues(parameters);
                 
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("wrong parameter values");
-                    return resp;                    
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "invalid parameter values");
+                   
                 }
 
                 if(!service.ChceckIfFileIsSupported(image))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Not supported image type");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "Not supported image type");
+                  
                 }
 
-                if (!service.CheckIfContainerExists(clientHash))
+                if (!service.CheckIfContainerExists(containerService))
                     throw new Exception("Problem with container doesn't exists");
 
-                if (!service.CheckIfImageExists(service.GetImagePathUpload(image),clientHash))
+                if (!service.CheckIfImageExists(service.GetImagePathUpload(image),containerService))
                 {
-                    resp.StatusCode = HttpStatusCode.NotFound;
-                    resp.Content = new StringContent("Requested image doesn't exists");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.NotFound, "Requested image doesn't exists");
+                    
                 }
 
                 //checks if watermark image exist if not watermark presence parameter is set to false
-                if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png"), clientHash))
+                if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png"), containerService))
                     requestedParameters.SetWatermarkPresence(false);
                 //checks if hash from parameter is valid for requested picture
                 else if (service.GetImageSecurityHash(clientHash, image).Substring(0, 4) == requestedParameters.WatermarkString)
@@ -77,7 +78,7 @@ namespace ImageResizer
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
-                var imageData = databaseService.GetImageData(image, clientHash);
+                var imageData = databaseService.GetImageData(image, containerService);
                                
                     flagIsInOryginalImageRange = 
                         service.CheckIfImageRequestedImageResolutionIsInRange(
@@ -113,9 +114,9 @@ namespace ImageResizer
 
                 }              
 
-                if (service.CheckIfImageExists(imagePath,containerService.GetContainerName()))
+                if (service.CheckIfImageExists(imagePath,containerService))
                 {
-                    var tmpImg = service.DownloadImageFromStorageToStream(imagePath);
+                    var tmpImg = service.DownloadImageFromStorageToStream(imagePath,containerService);
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
                     response.Content = new ByteArrayContent(tmpImg.GetBuffer());
                     response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
@@ -131,13 +132,20 @@ namespace ImageResizer
                     return response;
                 }
 
-                if(service.CheckIfImageExists(service.GetImagePathUpload(image)))
+                if(service.CheckIfImageExists(service.GetImagePathUpload(image),containerService))
                 {                    
-                    var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
+                    var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
                     var mutadedImage = new MemoryStream();
                     
-                    mutadedImage = service.MutateImage(imageFromStorage, requestedParameters.Width, requestedParameters.Height, requestedParameters.Padding,imageExtension,requestedParameters.WatermarkPresence);
-                    service.SaveImage(mutadedImage, imagePath);
+                    mutadedImage = service.MutateImage(
+                        imageFromStorage,
+                        containerService,
+                        requestedParameters.Width, 
+                        requestedParameters.Height, 
+                        requestedParameters.Padding,
+                        imageExtension,
+                        requestedParameters.WatermarkPresence);
+                    service.SaveImage(mutadedImage, imagePath,containerService);
 
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
                     response.Content = new ByteArrayContent(mutadedImage.GetBuffer());

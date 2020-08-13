@@ -35,14 +35,14 @@ namespace ImageResizer
                     return resp;
                 }
 
-                var cachedImagesDictionary = service.GetCachedImagesDictionary();
+                var cachedImagesDictionary = service.GetCachedImagesDictionary(containerService);
                 bool flag = true;
                 int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
 
                 foreach (var item in cachedImagesDictionary)
                 {
                     if (item.Value < DateTime.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
-                        if (!service.DeleteCachedImage(item.Key))
+                        if (!service.DeleteCachedImage(item.Key,containerService))
                             flag = false;
                 }
 

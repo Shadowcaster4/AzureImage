@@ -22,7 +22,7 @@ namespace ImageResizer.Services.Interfaces
         bool DeleteCachedImage(string imagePath, IContainerService container);
         bool DeleteClientContainer(IContainerService clientContainer);
         bool DeleteImageDirectory(string directoryName, IContainerService container);
-        bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection, IContainerService container);
+        bool DeleteLetterDirectory(string fileName, IContainerService container);
         MemoryStream DownloadImageFromStorageToStream(string imagePath, IContainerService container);
         List<string> GetBlobContainers();
         string GetImagePathResize(QueryParameterValues parameters, string fileName);

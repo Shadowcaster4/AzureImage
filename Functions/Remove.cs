@@ -71,9 +71,9 @@ namespace ImageResizer
                         if(service.GetImageSecurityHash(req.Form["container"],req.Form["imageName"]) != req.Form["secKey"])
                             break;
                        
-                        if(service.DeleteImageDirectory(req.Form["imageName"]))
+                        if(service.DeleteImageDirectory(req.Form["imageName"],containerService))
                         { 
-                            databaseService.DeleteImages(req.Form["imageName"], req.Form["container"]);
+                            databaseService.DeleteImages(req.Form["imageName"], containerService);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested directory is gone");
                         }
@@ -92,7 +92,7 @@ namespace ImageResizer
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]).Substring(0, 4) == requestedParameters.WatermarkString)
                             requestedParameters.SetWatermarkPresence(false);
 
-                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"])))
+                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"]),containerService))
                         {
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested image is gone");
@@ -107,9 +107,9 @@ namespace ImageResizer
                         if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
                             break;         
 
-                        if (service.DeleteLetterDirectory(req.Form["imageName"],databaseService.dbConnection2))
+                        if (service.DeleteLetterDirectory(req.Form["imageName"],containerService))
                         {
-                            databaseService.DeleteLetterDirectory(req.Form["imageName"], req.Form["container"]);
+                            databaseService.DeleteLetterDirectory(req.Form["imageName"], containerService);
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("Requested letter directory is gone");
                         

@@ -484,6 +484,11 @@ namespace ImageResizer.Services
             throw new NotImplementedException();
         }
 
+        public bool DeleteLetterDirectory(string fileName, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection, IContainerService container)
         {
             throw new NotImplementedException();

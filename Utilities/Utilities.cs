@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using ImageResizer.Database;
 using ImageResizer.Services;
@@ -27,6 +29,15 @@ namespace ImageResizer.Utilities
             if(dbConnString.IsNullOrEmpty())
                 dbConnString = Environment.GetEnvironmentVariable("DatabaseConnectionString");
             return  new DatabaseService(dbConnString);
+        }
+
+        public static HttpResponseMessage GetHttpResponseMessage_ReturnsStatusCodeAndMessage(HttpStatusCode statusCode,string ResponseMessage)
+        {
+            return new HttpResponseMessage
+            {
+                StatusCode = statusCode,
+                Content = new StringContent(ResponseMessage)
+            };
         }
     }
 }
