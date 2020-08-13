@@ -25,7 +25,7 @@ namespace ImageResizer.Services.Interfaces
     {
 
         private readonly DirectoryInfo serviceClient;
-        private DirectoryInfo containerClient;        
+             
         
                 
         public ImageServiceLocally() : base()
@@ -192,22 +192,19 @@ namespace ImageResizer.Services.Interfaces
 
         public bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService)
         {
-            if (!SetServiceContainer(userContainerName))
-            {
-                CreateUsersContainer(userContainerName);
-                SetServiceContainer(userContainerName);
-            }
-            if(Che)
+           
+            if (!CheckIfContainerExists(container.GetContainerName()))
+                CreateUsersContainer(container);
+            var containerClient = GetServiceContainer(container.GetContainerName());
 
-
-            if (CheckIfImageExists(imagePath))
+            if (CheckIfImageExists(imagePath,container.GetContainerName()))
                 return false;
 
-            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), userContainerName);
+            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
 
             image.Position = 0;
 
-            string fullPath = containerClient.FullName + "\\" + imagePath;
+            string fullPath = GetFullFilePath(container.GetContainerName(),imagePath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
             using (FileStream uploadImage = File.Create(fullPath))
             {
@@ -216,14 +213,12 @@ namespace ImageResizer.Services.Interfaces
                 tmpStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
             }
-
             dbService.SaveImagesData(new List<ImageData>(){imageData});
-
             image.Dispose();
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height,ImageData imageData)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height,ImageData imageData)
         {
                return width <= imageData.Width || height <= imageData.Height;
         }
@@ -241,10 +236,9 @@ namespace ImageResizer.Services.Interfaces
             return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
         }
 
-        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
+        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
         {
-            if (!containerClient.Exists)
-                throw new Exception("Blob container is not set");
+            var containerClient = GetServiceContainer(container.GetContainerName());
 
             Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
 
@@ -252,21 +246,21 @@ namespace ImageResizer.Services.Interfaces
             return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
         }
 
-        public Dictionary<string, DateTime> GetCachedImagesDictionary()
+        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
         {
             Dictionary<string, LocalFileInfo> cachedImages = new Dictionary<string, LocalFileInfo>();
-
+            var containerClient = GetServiceContainer(container.GetContainerName());
             GetLocalFiles(cachedImages, containerClient.FullName, 3);
 
             return cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
         }
 
 
-        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int deepth)
+        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int depth)
         {
             string[] subDirs = Directory.GetDirectories(startLocation);
 
-            if (deepth == 0)
+            if (depth == 0)
             {
                 string[] files = Directory.GetFiles(startLocation, "*.*");
                 foreach (string file in files)
@@ -279,17 +273,19 @@ namespace ImageResizer.Services.Interfaces
 
             foreach (string dir in subDirs)
             {
-                GetLocalFiles(myFiles, dir, deepth - 1);
+                GetLocalFiles(myFiles, dir, depth - 1);
             }
             return myFiles;
         }
         #endregion
         #region Resize Methods
-        public MemoryStream DownloadImageFromStorageToStream(string imagePath)
+        public MemoryStream DownloadImageFromStorageToStream(string imagePath,IContainerService container)
         {
-            SetImageObject(imagePath);
+            var containerClient = GetServiceContainer(container.GetContainerName());
+            
+           // SetImageObject(imagePath);
             MemoryStream outputStream = new MemoryStream();
-            using(var fs = File.Open(containerClient.FullName + "\\" + imagePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using(var fs = File.Open(GetFullFilePath(GetContainerPath(container.GetContainerName()),imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 fs.CopyTo(outputStream);
                 fs.Dispose();
@@ -309,13 +305,13 @@ namespace ImageResizer.Services.Interfaces
             };
         }
                 
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat, bool watermark)
+        public MemoryStream MutateImage(MemoryStream imageFromStorage,IContainerService container , int width, int heigth, bool padding, string fileFormat, bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());
            
             if (watermark)
             {
-                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));
+                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"),container);
                 Image<Rgba32> watermarkImage = (Image<Rgba32>)Image.Load(watermarkStream.ToArray());
                 watermarkImage.Mutate(x => x.Resize(new ResizeOptions
                 {
