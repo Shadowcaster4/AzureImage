@@ -33,7 +33,7 @@ namespace ImageResizer.Services
                {
                     DbConnection = SetDbConnection(DbConnString);
                     IImageService service =
-                        Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                        Utilities.Utilities.GetImageService("Local");
                }
                else
                {               

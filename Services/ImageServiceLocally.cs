@@ -17,6 +17,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ImageResizer.Database;
 using ImageResizer.Functions;
+using ServiceStack;
 
 namespace ImageResizer.Services.Interfaces
 {
@@ -35,7 +36,7 @@ namespace ImageResizer.Services.Interfaces
         #region Containers Methods
         public bool CheckIfContainerExists(string containerName)
         {
-            return Directory.Exists(serviceClient.FullName + "\\" + containerName);
+            return Directory.Exists(GetContainerPath(containerName));
         }
 
         public bool SetServiceContainer(string containerName)
@@ -45,10 +46,33 @@ namespace ImageResizer.Services.Interfaces
 
             if (CheckIfContainerExists(containerName))
             {
-                containerClient = new DirectoryInfo(serviceClient.FullName + "\\" + containerName);
+                containerClient = new DirectoryInfo(GetContainerPath(containerName));
                 return true;
             }
             return false;
+        }
+
+        private string GetContainerPath(string containerName)
+        {
+            return serviceClient.FullName + "\\" + containerName;
+        }
+
+        /*   private string GetContainerPath(string serviceClientFullPath, string containerName)
+        {
+            return serviceClientFullPath + "\\" + containerName;
+        }
+     */
+        private DirectoryInfo  GetServiceContainer(string containerName)
+        {
+            if (!CheckIfContainerNameIsValid(containerName))
+                throw new Exception("Invalid container name");
+
+            if (CheckIfContainerExists(containerName))
+            {
+                return new DirectoryInfo(GetContainerPath(containerName));
+                
+            }
+            throw new Exception("container doesnt exists");
         }
 
         public List<string> GetBlobContainers()
@@ -56,11 +80,12 @@ namespace ImageResizer.Services.Interfaces
             return serviceClient.GetDirectories().Select(x => x.Name).ToList();
         }
 
-        public bool DeleteClientContainer(string clientContainerName)
+        public bool DeleteClientContainer(IContainerService clientContainer)
         {
             try
             {
-                containerClient.Delete(true);
+                var container = GetServiceContainer(clientContainer.GetContainerName());
+                container.Delete(true);
                 return true;
             }
             catch (Exception)
@@ -70,11 +95,11 @@ namespace ImageResizer.Services.Interfaces
 
         }
 
-        public bool CreateUsersContainer(string clientContainerName)
+        public bool CreateUsersContainer(IContainerService clientContainer)
         {
-            if (CheckIfContainerExists(clientContainerName))
+            if (CheckIfContainerExists(clientContainer.GetContainerName()))
                 return false;
-            serviceClient.CreateSubdirectory(clientContainerName);
+            serviceClient.CreateSubdirectory(clientContainer.GetContainerName());
             return true;
         }
         #endregion
@@ -90,8 +115,9 @@ namespace ImageResizer.Services.Interfaces
             return CheckIfImageExists(imagePath);
         }
 
-        public Dictionary<string, long> GetImagesDictionarySize()
+        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
         {
+            SetServiceContainer(container.GetContainerName())
             if (!containerClient.Exists)
                 throw new Exception("Blob container is not set");
 

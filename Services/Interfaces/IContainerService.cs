@@ -4,8 +4,8 @@ using System.Text;
 
 namespace ImageResizer.Services.Interfaces
 {
-    interface ContainerInterface
-    {       
-        public void CreateTableIfNotExists();
+    public interface IContainerService
+    {
+        string GetContainerName();
     }
 }
