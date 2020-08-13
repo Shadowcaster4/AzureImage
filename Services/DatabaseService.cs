@@ -26,6 +26,7 @@ namespace ImageResizer.Services
         public IDbConnection dbConnection2 { get; }
         private  OrmLiteConnectionFactory DbConnection { get; }
         private string DbConnString { get;}
+        private IImageService service;
 
         public DatabaseService(string dbConnString)
         {
@@ -33,15 +34,15 @@ namespace ImageResizer.Services
                if(CheckIfDbFileExist(DbConnString))
                {
                     DbConnection = SetDbConnection(DbConnString);
-                 //   IImageService service =
-                 //       Utilities.Utilities.GetImageService("Local");
+                    service =
+                        Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                }
                else
                {               
               
                    CreateDatabase(dbConnString);
                DbConnection = SetDbConnection(DbConnString);
-               IImageService service =
+                   service =
                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
                CheckAndRestoreData(service);
@@ -125,9 +126,11 @@ namespace ImageResizer.Services
             {
                 RestoreDataForContainer(service,new ContainerClass(container)); 
             }
-            */
             
+            */
         }
+
+        
 
         public bool CreateTableIfNotExists()
         {

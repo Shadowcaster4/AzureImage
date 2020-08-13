@@ -11,14 +11,6 @@
     <Compile Remove="test.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Database\ImageResizerDB.db" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Database\ImageResizerDB.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.4.4" />
     <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="3.1.6" />
@@ -31,6 +23,9 @@
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Database\ImageResizerDB.db">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="host.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

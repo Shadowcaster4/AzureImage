@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,8 +28,8 @@ namespace ImageResizer.Services
     public class ImageService : BaseService, IImageService
     {
         private readonly BlobServiceClient blobServiceClient;
-        private BlobContainerClient blobContainerClient;
-        private BlobBaseClient blobBaseClient;
+        //private BlobContainerClient blobContainerClient;
+        //private BlobBaseClient blobBaseClient;
         public ImageService(string applicationConnectionString) : base(applicationConnectionString)
         {
             blobServiceClient = new BlobServiceClient(applicationConnectionString);            
@@ -37,61 +38,67 @@ namespace ImageResizer.Services
         public ImageService() : base()
         {
             blobServiceClient = new BlobServiceClient(base._applicationConnectionString);            
-        }             
-        
-        /*
+        }
+
+        private BlobContainerClient GetServiceContainer(IContainerService container)
+        {
+            if (!CheckIfContainerNameIsValid(container))
+                throw new Exception("Invalid container name");
+
+            if (CheckIfContainerExists(container))
+            {
+                return blobServiceClient.GetBlobContainerClient(container.GetContainerName());
+            }
+            throw new Exception("container doesnt exists");
+        }
+
         #region Containers Methods
-        public bool CheckIfContainerExists(string containerName)
+        public bool CheckIfContainerExists(IContainerService container)
         {
-            if (blobServiceClient.GetBlobContainerClient(containerName).Exists())
+            if (blobServiceClient.GetBlobContainerClient(container.GetContainerName()).Exists())
             {
                 return true;
             }
             return false;
         }
-        public bool SetServiceContainer(string containerName)
-        {
-            if (!CheckIfContainerNameIsValid(containerName))
-                return false;
-
-            if (CheckIfContainerExists(containerName))
-            {
-                blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                return true;
-            }
-            return false;
-
-        }
+      
         public List<string> GetBlobContainers()
         {
             return blobServiceClient.GetBlobContainers().Select(x=>x.Name).Where(x => !x.Contains("azure-webjobs")).ToList();            
         }
 
-        public bool DeleteClientContainer(string clientContainerName)
+        public bool DeleteClientContainer(IContainerService container)
         {
-            if (CheckIfContainerExists(clientContainerName))
+            if (CheckIfContainerExists(container))
             {
-                blobServiceClient.DeleteBlobContainer(clientContainerName);
+                blobServiceClient.DeleteBlobContainer(container.GetContainerName());
                 return true;
             }
             return false;
         }
 
-        public bool CreateUsersContainer(string clientContainerName)
+        public bool CreateUsersContainer(IContainerService clientContainer)
         {
-            if (CheckIfContainerExists(clientContainerName))
+            if (CheckIfContainerExists(clientContainer))
                 return false;
-            blobServiceClient.CreateBlobContainer(clientContainerName, PublicAccessType.Blob);
+            blobServiceClient.CreateBlobContainer(clientContainer.GetContainerName(), PublicAccessType.Blob);
             return true;
         }
 
         #endregion
 
         #region Image Blobs Methods
-        public bool CheckIfImageExists(string imagePath)
+        public bool CheckIfImageExists(string imagePath, IContainerService container)
         {
-            return blobContainerClient.GetBlobBaseClient(imagePath).Exists();               
+            return GetServiceContainer(container).GetBlobBaseClient(imagePath).Exists();
         }
+
+        public BlobBaseClient GetBlobImage(string imagePath, IContainerService container)
+        {
+            //return GetServiceContainer(container).GetBlobBaseClient(imagePath);
+            return new BlobBaseClient(_applicationConnectionString,container.GetContainerName(),imagePath);
+        }
+        /*
         public bool SetImageObject(string imagePath)
         {
             if (CheckIfImageExists(imagePath))
@@ -101,13 +108,14 @@ namespace ImageResizer.Services
             }
             return false;         
         }
-        public Azure.Pageable<BlobItem> GetImagesFromContainer()
+        */
+        public Azure.Pageable<BlobItem> GetImagesFromContainer(IContainerService clientContainer)
         {
             try
             {
-                if (!blobContainerClient.Exists())
+                if (!CheckIfContainerExists(clientContainer))
                     throw new Exception("Blob container is not set");
-                return blobContainerClient.GetBlobs();
+                return GetServiceContainer(clientContainer).GetBlobs();
             }
             catch (Exception e)
             {
@@ -115,51 +123,48 @@ namespace ImageResizer.Services
             }
         }
 
-        public Dictionary<string, long> GetImagesDictionarySize()
+        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
         {
-            if (!blobContainerClient.Exists())
-                throw new Exception("Blob container is not set");
-            var blobs = blobContainerClient.GetBlobs();
+            var blobs = GetImagesFromContainer(container);
 
             Dictionary<string, long> imagesDictionary = blobs.ToDictionary(b => b.Name, b => b.Properties.ContentLength ?? 0);
             return imagesDictionary;
         }        
 
-        public bool DeleteCachedImage(string imagePath)
+        public bool DeleteCachedImage(string imagePath, IContainerService container)
         {
-            if (SetImageObject(imagePath))
+            if (CheckIfImageExists(imagePath,container))
             {
-                blobBaseClient.Delete();
+                GetBlobImage(imagePath, container).Delete();
                 return true;
             }
             return false;
         }
 
-        public bool DeleteImageDirectory(string directoryName)
+        public bool DeleteImageDirectory(string directoryName, IContainerService container)
         {
-            var containerObjects = GetImagesFromContainer();
+            var containerObjects = GetImagesFromContainer(container);
             bool flag = false;
             foreach (BlobItem blobItem in containerObjects)
             {
                 if (blobItem.Name.Contains("/" + directoryName.Replace(".","") + "/"))
                 {
-                    blobContainerClient.DeleteBlobIfExists(blobItem.Name);
+                    GetServiceContainer(container).DeleteBlobIfExists(blobItem.Name);
                     flag = true;
                 }                   
             }
             return flag;
         }
 
-        public bool DeleteLetterDirectory(string fileName,IDbConnection dbConnection)
+        public bool DeleteLetterDirectory(string fileName, IContainerService container)
         {
-            var containerObjects = GetImagesFromContainer();
+            var containerObjects = GetImagesFromContainer(container);
             bool flag = false;
             foreach (BlobItem blobItem in containerObjects)
             {
                 if (blobItem.Name.StartsWith(fileName[0] + "/"))
                 {
-                    blobContainerClient.DeleteBlobIfExists(blobItem.Name);
-                    dbConnection.Execute($"DELETE FROM {Environment.GetEnvironmentVariable("SQLiteBaseTableName") + blobContainerClient.Name}   where imageName='{blobItem.Name.Substring(blobItem.Name.LastIndexOf("/")+1)}'");
+                    GetServiceContainer(container).DeleteBlobIfExists(blobItem.Name);
                     flag = true;
                 }
             }
@@ -181,31 +186,26 @@ namespace ImageResizer.Services
             };
         }
 
-        public bool UploadImage(Stream image, string userContainerName, string imagePath, IDatabaseService dbService)
+        public bool UploadImage(Stream image, IContainerService container,  string imagePath, IDatabaseService dbService)
         {
-            if (!SetServiceContainer(userContainerName))
-            {
-                CreateUsersContainer(userContainerName);
-                SetServiceContainer(userContainerName);
-            }
-
-            if (CheckIfImageExists(imagePath))
+            if (!CheckIfContainerExists(container))
+              CreateUsersContainer(container);
+              
+            if (CheckIfImageExists(imagePath,container))
                 return false;
-
-            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), userContainerName);
-
-
-
+            
+            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
+            
             image.Position = 0;
-            blobContainerClient.UploadBlob(imagePath, image);
+
+            GetServiceContainer(container).UploadBlob(imagePath, image);
 
             dbService.SaveImagesData(new List<ImageData>() { imageData });
-           
             image.Dispose();
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string userContainerName, string imageName, int width, int height, ImageData imageData)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData)
         {
             return width <= imageData.Width || height <= imageData.Height;
         }
@@ -223,11 +223,13 @@ namespace ImageResizer.Services
             return fileName[0] + "/" + fileName.Replace(".", "") + "/" + fileName;
         }
 
-        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary()
+        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
         {
-            if (!blobContainerClient.Exists())
+            if (!CheckIfContainerExists(container))
                 throw new Exception("Blob container is not set");
-            var blobs = blobContainerClient.GetBlobs().Where(x=>x.Name.Count(element=>element=='/')==2);
+            var blobs = GetServiceContainer(container)
+                .GetBlobs().Where(x=>x.Name.Count(element=>element=='/')==2);
+
             var BaseImagesDictionary =new Dictionary<string, CloudFileInfo>();
 
             foreach(BlobItem image in blobs)
@@ -237,30 +239,33 @@ namespace ImageResizer.Services
             return BaseImagesDictionary;
         }
 
-        public Dictionary<string, DateTime> GetCachedImagesDictionary()
+        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
         {
-            if (!blobContainerClient.Exists())
+            if (!CheckIfContainerExists(container))
                 throw new Exception("Blob container is not set");
-            var blobs = blobContainerClient.GetBlobs().Where(x => x.Name.Count(element => element == '/') > 2);
+            var blobs = GetServiceContainer(container)
+                .GetBlobs().Where(x => x.Name.Count(element => element == '/') > 2);
             var CachedImagesDictionary = new Dictionary<string, DateTime>();
 
             foreach (BlobItem image in blobs)
             {
                 CachedImagesDictionary.Add(image.Name, image.Properties.CreatedOn.Value.DateTime);
             }
-
+            
             return CachedImagesDictionary;
         }
         #endregion
 
         #region Resize Methods
 
-        public MemoryStream DownloadImageFromStorageToStream(string imagePath)
+        public MemoryStream DownloadImageFromStorageToStream(string imagePath, IContainerService container)
         {
-            SetImageObject(imagePath);
-            BlobDownloadInfo downloadInfo = blobBaseClient.Download();
             MemoryStream outputStream = new MemoryStream();
-            downloadInfo.Content.CopyTo(outputStream);
+            GetBlobImage(imagePath,container).DownloadTo(outputStream);
+            //BlobDownloadInfo downloadInfo = GetBlobImage(imagePath,container).DownloadTo(outputStream);
+
+           // MemoryStream outputStream = new MemoryStream();
+           // downloadInfo.Content.CopyTo(outputStream);
             return outputStream;
         }
 
@@ -276,37 +281,15 @@ namespace ImageResizer.Services
             };
         }
 
-        public IImageDecoder GetImageDecoder(string fileFormat)
-        {
-            switch (fileFormat)
-            {
-                case "png":
-                    return new PngDecoder();
-                case "jpg":
-                    return new JpegDecoder();
-                case "jpeg":
-                    return new JpegDecoder();
-                case "gif":
-                    return new GifDecoder();
-                default:
-                    return new JpegDecoder();
-            }
-        }
-
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, int width, int heigth, bool padding, string fileFormat, bool watermark)
+      
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int heigth, bool padding, string fileFormat, bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());       
 
-            if (fileFormat == "png")
-            {
-                var whiteBackgroundForPngImage = new Image<Rgba32>(image.Width, image.Height, Color.FromRgb(255, 255, 255));
-                whiteBackgroundForPngImage.Mutate(x => x.DrawImage(image, new Point(0, 0), 1.0f));
-                image = whiteBackgroundForPngImage;
-            }
-
+          
             if (watermark)
             {            
-                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"));                
+                MemoryStream watermarkStream = DownloadImageFromStorageToStream(GetImagePathUpload("watermark.png"),container);                
                 Image<Rgba32> watermarkImage = (Image<Rgba32>)Image.Load(watermarkStream.ToArray());
                 watermarkImage.Mutate(x => x.Resize(new ResizeOptions
                 {
@@ -331,6 +314,12 @@ namespace ImageResizer.Services
 
             if (padding)
             {
+                if (fileFormat == "png")
+                {
+                    var whiteBackgroundForPngImage = new Image<Rgba32>(image.Width, image.Height, Color.FromRgb(255, 255, 255));
+                    whiteBackgroundForPngImage.Mutate(x => x.DrawImage(image, new Point(0, 0), 1.0f));
+                    image = whiteBackgroundForPngImage;
+                }
                 //var
                 Image<Rgba32> imageContainer = new Image<Rgba32>(width, heigth, Color.FromRgb(255, 0, 0));
                 if (image.Width < imageContainer.Width)
@@ -345,22 +334,21 @@ namespace ImageResizer.Services
             return output;
         }
 
-        public bool SaveImage(MemoryStream imageToSave, string imagePath)
+        public bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container)
         {
-            if (!blobContainerClient.Exists())
+            if (!CheckIfContainerExists(container))
                 return false;
             imageToSave.Position = 0;
-            blobContainerClient.UploadBlob(imagePath, imageToSave);
+            GetServiceContainer(container).UploadBlob(imagePath, imageToSave);
             return true;
         }
-
-
+        
         #endregion
 
         #region Validation Methods /Utilities
-        public bool CheckIfContainerNameIsValid(string containerName)
+        public bool CheckIfContainerNameIsValid(IContainerService container)
         {
-            return Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");          
+            return Regex.IsMatch(container.GetContainerName(), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");          
         }
 
         public bool ChceckIfFileIsSupported(string fileName)
@@ -418,166 +406,6 @@ namespace ImageResizer.Services
             var x = fileName;
             return x;
         }
-        */
-        public bool ChceckIfFileIsSupported(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfContainerExists(IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfContainerNameIsValid(IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfImageExists(string imagePath, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfContainerExists(string containerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfContainerNameIsValid(string containerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfImageExists(string imagePath, string clientContainerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfParametersAreInRange(int width, int height)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CreateUsersContainer(IContainerService clientContainer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DeleteCachedImage(string imagePath, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DeleteClientContainer(IContainerService clientContainer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DeleteImageDirectory(string directoryName, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DeleteLetterDirectory(string fileName, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool DeleteLetterDirectory(string fileName, IDbConnection dbConnection, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public MemoryStream DownloadImageFromStorageToStream(string imagePath, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<string> GetBlobContainers()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetImagePathResize(QueryParameterValues parameters, string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetImagePathUpload(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetImageExtension(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetImageSecurityHash(string container, string imageName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetUploadImageSecurityKey(string container, string imageName, string imageSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IImageEncoder GetImageEncoder(string fileFormat)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int heigth,
-            bool padding, string fileFormat, bool watermark)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool SetImageObject(string imagePath, string clientContainerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool SetServiceContainer(string containerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string Test(string fileName)
-        {
-            throw new NotImplementedException();
-        }
+       
     }
 }
