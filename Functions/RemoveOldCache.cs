@@ -8,6 +8,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ImageResizer.Entities;
 
 namespace ImageResizer
 {
@@ -25,11 +26,12 @@ namespace ImageResizer
                 var resp = new HttpResponseMessage();
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IContainerService containerService = new ContainerClass(container);
 
-                if (!service.SetServiceContainer(container))
+                if (!service.CheckIfContainerExists(containerService))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Provided container is innvalid");
+                    resp.Content = new StringContent("Provided container is invalid");
                     return resp;
                 }
 

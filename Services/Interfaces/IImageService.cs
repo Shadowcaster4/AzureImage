@@ -13,9 +13,9 @@ namespace ImageResizer.Services.Interfaces
     public interface IImageService
     {
         bool ChceckIfFileIsSupported(string fileName);
-        bool CheckIfContainerExists(string containerName);
-        bool CheckIfContainerNameIsValid(string containerName);
-        bool CheckIfImageExists(string imagePath, string clientContainerName);
+        bool CheckIfContainerExists(IContainerService container);
+        bool CheckIfContainerNameIsValid(IContainerService container);
+        bool CheckIfImageExists(string imagePath, IContainerService container);
         bool CheckIfParametersAreInRange(int width, int height);
         bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData);
         bool CreateUsersContainer(IContainerService clientContainer);
@@ -36,8 +36,8 @@ namespace ImageResizer.Services.Interfaces
         Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container);
         MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int heigth, bool padding, string fileFormat, bool watermark);
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
-        bool SetImageObject(string imagePath, string clientContainerName);
-        bool SetServiceContainer(string containerName);
+       // bool SetImageObject(string imagePath, string clientContainerName);
+       // bool SetServiceContainer(string containerName);
         bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService);
 
         string Test(string fileName);

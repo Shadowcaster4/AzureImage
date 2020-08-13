@@ -30,7 +30,9 @@ namespace ImageResizer
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
-                if (!service.SetServiceContainer(container))
+                IContainerService containerService = new ContainerClass(container);
+
+                if (!service.CheckIfContainerExists(containerService))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
                     resp.Content = new StringContent("");
@@ -38,7 +40,7 @@ namespace ImageResizer
                     return resp;
                 }
                
-                var cloudImages = service.GetBaseImagesDictionary();
+                var cloudImages = service.GetBaseImagesDictionary(containerService);
                 resp.StatusCode = HttpStatusCode.OK;
                 resp.Content =new StringContent(JsonConvert.SerializeObject(value: cloudImages));
                 resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");

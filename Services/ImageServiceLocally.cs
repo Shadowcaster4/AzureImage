@@ -34,17 +34,17 @@ namespace ImageResizer.Services.Interfaces
         }
 
         #region Containers Methods
-        public bool CheckIfContainerExists(string containerName)
+        public bool CheckIfContainerExists(IContainerService container)
         {
-            return Directory.Exists(GetContainerPath(containerName));
+            return Directory.Exists(GetContainerPath(container));
         }
 
-        public bool SetServiceContainer(string containerName)
+        public bool SetServiceContainer(IContainerService container)
         {
-            if (!CheckIfContainerNameIsValid(containerName))
+            if (!CheckIfContainerNameIsValid(container))
                 return false;
 
-            if (CheckIfContainerExists(containerName))
+            if (CheckIfContainerExists(container))
             {
                // containerClient = new DirectoryInfo(GetContainerPath(containerName));
                 return true;
@@ -52,14 +52,14 @@ namespace ImageResizer.Services.Interfaces
             return false;
         }
 
-        private string GetContainerPath(string containerName)
+        private string GetContainerPath(IContainerService container)
         {
-            return serviceClient.FullName + "\\" + containerName;
+            return serviceClient.FullName + "\\" + container.GetContainerName();
         }
 
-        private string GetFullFilePath(string containerName, string filePath)
+        private string GetFullFilePath(IContainerService container, string filePath)
         {
-            return GetContainerPath(containerName) + "\\" + filePath;
+            return GetContainerPath(container) + "\\" + filePath;
         }
 
         /*   private string GetContainerPath(string serviceClientFullPath, string containerName)
@@ -67,14 +67,14 @@ namespace ImageResizer.Services.Interfaces
             return serviceClientFullPath + "\\" + containerName;
         }
      */
-        private DirectoryInfo  GetServiceContainer(string containerName)
+        private DirectoryInfo  GetServiceContainer(IContainerService container)
         {
-            if (!CheckIfContainerNameIsValid(containerName))
+            if (!CheckIfContainerNameIsValid(container))
                 throw new Exception("Invalid container name");
 
-            if (CheckIfContainerExists(containerName))
+            if (CheckIfContainerExists(container))
             {
-                return new DirectoryInfo(GetContainerPath(containerName));
+                return new DirectoryInfo(GetContainerPath(container));
                 
             }
             throw new Exception("container doesnt exists");
@@ -89,7 +89,7 @@ namespace ImageResizer.Services.Interfaces
         {
             try
             {
-                var container = GetServiceContainer(clientContainer.GetContainerName());
+                var container = GetServiceContainer(clientContainer);
                 container.Delete(true);
                 return true;
             }
@@ -102,7 +102,7 @@ namespace ImageResizer.Services.Interfaces
 
         public bool CreateUsersContainer(IContainerService clientContainer)
         {
-            if (CheckIfContainerExists(clientContainer.GetContainerName()))
+            if (CheckIfContainerExists(clientContainer))
                 return false;
             serviceClient.CreateSubdirectory(clientContainer.GetContainerName());
             return true;
@@ -110,23 +110,24 @@ namespace ImageResizer.Services.Interfaces
         #endregion
         #region Image Blobs Methods
 
-        public bool CheckIfImageExists(string imagePath,string clientContainerName)
+        public bool CheckIfImageExists(string imagePath, IContainerService container)
         {
             return File.Exists(
                 GetFullFilePath(
-                    clientContainerName,
+                    container,
                     imagePath
                     ));
         }
 
         public bool SetImageObject(string imagePath, string clientContainerName)
         {
-            return CheckIfImageExists(imagePath,clientContainerName);
+           // return CheckIfImageExists(imagePath,clientContainerName);
+           return true;
         }
 
         public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
         {
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
 
             Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
 
@@ -142,9 +143,9 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteCachedImage(string imagePath,IContainerService container)
         {
-            if (CheckIfImageExists(imagePath,container.GetContainerName()))
+            if (CheckIfImageExists(imagePath,container))
             {
-                string path = GetFullFilePath(container.GetContainerName(),imagePath);
+                string path = GetFullFilePath(container,imagePath);
                 path = path.Substring(0, path.LastIndexOf("\\"));
                 Directory.Delete(Path.GetFullPath(path), true);
                 return true;
@@ -154,9 +155,9 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteImageDirectory(string directoryName,IContainerService container)
         {
-            if (File.Exists(GetFullFilePath(container.GetContainerName(), GetImagePathUpload(directoryName))))
+            if (File.Exists(GetFullFilePath(container, GetImagePathUpload(directoryName))))
             {
-                string directoryPath = GetFullFilePath(container.GetContainerName(), GetImagePathUpload(directoryName));
+                string directoryPath = GetFullFilePath(container, GetImagePathUpload(directoryName));
                 directoryPath = directoryPath.Substring(0, directoryPath.LastIndexOf("\\"));
                 Directory.Delete(directoryPath, true);
                 return true;
@@ -169,7 +170,7 @@ namespace ImageResizer.Services.Interfaces
             Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
             GetLocalFiles(myBaseImagesDictionary, container.GetContainerName(), 2);
             
-            Directory.Delete(GetContainerPath(container.GetContainerName()) + "\\" + fileName[0], true);
+            Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
             return true;
         }
 
@@ -193,18 +194,18 @@ namespace ImageResizer.Services.Interfaces
         public bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService)
         {
            
-            if (!CheckIfContainerExists(container.GetContainerName()))
+            if (!CheckIfContainerExists(container))
                 CreateUsersContainer(container);
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
 
-            if (CheckIfImageExists(imagePath,container.GetContainerName()))
+            if (CheckIfImageExists(imagePath,container))
                 return false;
 
             var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
 
             image.Position = 0;
 
-            string fullPath = GetFullFilePath(container.GetContainerName(),imagePath);
+            string fullPath = GetFullFilePath(container,imagePath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
             using (FileStream uploadImage = File.Create(fullPath))
             {
@@ -238,7 +239,7 @@ namespace ImageResizer.Services.Interfaces
 
         public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
         {
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
 
             Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
 
@@ -249,7 +250,7 @@ namespace ImageResizer.Services.Interfaces
         public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
         {
             Dictionary<string, LocalFileInfo> cachedImages = new Dictionary<string, LocalFileInfo>();
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
             GetLocalFiles(cachedImages, containerClient.FullName, 3);
 
             return cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
@@ -281,11 +282,11 @@ namespace ImageResizer.Services.Interfaces
         #region Resize Methods
         public MemoryStream DownloadImageFromStorageToStream(string imagePath,IContainerService container)
         {
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
             
            // SetImageObject(imagePath);
             MemoryStream outputStream = new MemoryStream();
-            using(var fs = File.Open(GetFullFilePath(GetContainerPath(container.GetContainerName()),imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using(var fs = File.Open(GetFullFilePath(container,imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 fs.CopyTo(outputStream);
                 fs.Dispose();
@@ -357,7 +358,7 @@ namespace ImageResizer.Services.Interfaces
         }
         public bool SaveImage(MemoryStream imageToSave, string imagePath,IContainerService container)
         {
-            var containerClient = GetServiceContainer(container.GetContainerName());
+            var containerClient = GetServiceContainer(container);
             if (!containerClient.Exists)
                 return false;
             imageToSave.Position = 0;
@@ -375,9 +376,9 @@ namespace ImageResizer.Services.Interfaces
 
         #endregion
         #region Validation Methods /Utilities
-        public bool CheckIfContainerNameIsValid(string containerName)
+        public bool CheckIfContainerNameIsValid(IContainerService container)
         {
-            return Regex.IsMatch(containerName, @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");           
+            return Regex.IsMatch(container.GetContainerName(), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");           
         }
 
         public bool ChceckIfFileIsSupported(string fileName)

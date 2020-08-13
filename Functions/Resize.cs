@@ -36,6 +36,8 @@ namespace ImageResizer
             {
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IContainerService containerService = new ContainerClass(clientHash);
+
                 var requestedParameters = new QueryParameterValues(parameters);
                 
                 if (service.CheckIfParametersAreInRange(requestedParameters.Width,requestedParameters.Height))
@@ -52,18 +54,18 @@ namespace ImageResizer
                     return resp;
                 }
 
-                if (!service.SetServiceContainer(clientHash))
-                    throw new Exception("Problem with container invalid name/doesnt exists");
+                if (!service.CheckIfContainerExists(clientHash))
+                    throw new Exception("Problem with container doesn't exists");
 
-                if (!service.CheckIfImageExists(service.GetImagePathUpload(image)))
+                if (!service.CheckIfImageExists(service.GetImagePathUpload(image),clientHash))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
-                    resp.Content = new StringContent("Requested image doesnt exists");
+                    resp.Content = new StringContent("Requested image doesn't exists");
                     return resp;
                 }
 
                 //checks if watermark image exist if not watermark presence parameter is set to false
-                if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png")))
+                if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png"), clientHash))
                     requestedParameters.SetWatermarkPresence(false);
                 //checks if hash from parameter is valid for requested picture
                 else if (service.GetImageSecurityHash(clientHash, image).Substring(0, 4) == requestedParameters.WatermarkString)
@@ -79,7 +81,6 @@ namespace ImageResizer
                                
                     flagIsInOryginalImageRange = 
                         service.CheckIfImageRequestedImageResolutionIsInRange(
-                            clientHash,
                             image, 
                             requestedParameters.Width, 
                             requestedParameters.Height, 
@@ -90,7 +91,7 @@ namespace ImageResizer
                 {
                     if(!requestedParameters.WatermarkPresence)
                     {
-                        var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image));
+                        var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
                         HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
                         response.Content = new ByteArrayContent(tmpImg.GetBuffer());
                         response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
@@ -112,7 +113,7 @@ namespace ImageResizer
 
                 }              
 
-                if (service.CheckIfImageExists(imagePath))
+                if (service.CheckIfImageExists(imagePath,containerService.GetContainerName()))
                 {
                     var tmpImg = service.DownloadImageFromStorageToStream(imagePath);
                     HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);

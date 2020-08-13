@@ -33,26 +33,29 @@ namespace ImageResizer
                 var resp = new HttpResponseMessage();
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+
+                IContainerService containerService = new ContainerClass(req.Form["container"]);
+
                 resp.StatusCode = HttpStatusCode.Forbidden;
 
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
 
-                if (!service.SetServiceContainer(req.Form["container"]))
+                if (!service.CheckIfContainerExists(containerService))
                 {
                     resp.StatusCode = HttpStatusCode.NotFound;
-                    resp.Content = new StringContent("Provided container is innvalid");
+                    resp.Content = new StringContent("Provided container is invalid");
                     return resp;
                 }
 
                 switch (req.Form["objectToDelete"])
                 {
                     case "container":
-                        if (service.GetImageSecurityHash(req.Form["container"], Utilities.Utilities.ContainerRemoveKey) != req.Form["secKey"])
+                        if (service.GetImageSecurityHash(containerService.GetContainerName(), Utilities.Utilities.ContainerRemoveKey) != req.Form["secKey"])
                             break;
-                        if (service.CheckIfContainerExists(req.Form["container"]))
+                        if (service.CheckIfContainerExists(containerService))
                         {
-                            service.DeleteClientContainer(req.Form["container"]);
-                            databaseService.DeleteClientContainer(req.Form["container"]);
+                            service.DeleteClientContainer(containerService);
+                            databaseService.DeleteClientContainer(containerService);
 
                             resp.StatusCode = HttpStatusCode.OK;
                             resp.Content = new StringContent("User container is gone");

@@ -4,7 +4,6 @@ using ImageResizer.Entities;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using ServiceStack.OrmLite;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
@@ -12,11 +11,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Data;
 using System.Data.SQLite;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ImageResizer.Functions;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using Size = SixLabors.ImageSharp.Size;
 
 namespace ImageResizer.Services
 {
@@ -74,36 +75,36 @@ namespace ImageResizer.Services
         }
 
 
-        public void DeleteClientContainer(string container)
+        public void DeleteClientContainer(IContainerService container)
         {
             using (var db = DbConnection.Open())
             {
-                db.Delete<ImageData>(x => x.ClientContainer == container);
+                db.Delete<ImageData>(x => x.ClientContainer == container.GetContainerName());
             }
         }
 
-        public void DeleteImages(string imageName,string container)
+        public void DeleteImages(string imageName, IContainerService container)
         {
             using (var db = DbConnection.Open())
             {
-                db.Delete<ImageData>(x => x.ImageName == imageName && x.ClientContainer==container);
+                db.Delete<ImageData>(x => x.ImageName == imageName && x.ClientContainer==container.GetContainerName());
             }
         }
 
-        public void DeleteLetterDirectory(string imageName, string container)
+        public void DeleteLetterDirectory(string imageName, IContainerService container)
         {
             using (var db = DbConnection.Open())
             {
-                db.Delete<ImageData>(x => x.ImageName.StartsWith(imageName[0]) && x.ClientContainer == container);
+                db.Delete<ImageData>(x => x.ImageName.StartsWith(imageName[0]) && x.ClientContainer == container.GetContainerName());
             }
         }
 
-        public ImageData GetImageData(string imageName, string container)
+        public ImageData GetImageData(string imageName, IContainerService container)
         {
             using (var db = DbConnection.Open())
             {
               //  return db.Select<ImageData>(x => x.ImageName == imageName).First(); //&& x.ClientContainer == container);
-              return db.Single<ImageData>(x=>x.ClientContainer==container && x.ImageName==imageName);
+              return db.Single<ImageData>(x=>x.ClientContainer==container.GetContainerName() && x.ImageName==imageName);
               
             }
         }
@@ -122,7 +123,7 @@ namespace ImageResizer.Services
 
             foreach (string container in service.GetBlobContainers())
             {
-                RestoreDataForContainer(service, container);
+                RestoreDataForContainer(service,new ContainerClass(container)); 
             }
             
         }
@@ -136,10 +137,11 @@ namespace ImageResizer.Services
      
         }
 
-        public ImageData GetImageProperties(IImageService service,string imageName,string container)
+        public ImageData GetImageProperties(IImageService service,string imageName, IContainerService container)
         {
             MemoryStream openImage = service.DownloadImageFromStorageToStream(
-                service.GetImagePathUpload(imageName));
+                service.GetImagePathUpload(imageName),
+                container);
             openImage.Position = 0;
 
             Size imageSize = GetFileResolution.GetDimensions(new BinaryReader(openImage));
@@ -147,7 +149,7 @@ namespace ImageResizer.Services
             ImageData imageData = new ImageData()
             { 
                 ImageName = Path.GetFileName(imageName),
-                ClientContainer = container,
+                ClientContainer = container.GetContainerName(),
                 Width = imageSize.Width,
                 Height = imageSize.Height,
                 Size = openImage.Length.ToString()
@@ -166,14 +168,14 @@ namespace ImageResizer.Services
             }
         }
 
-        public void RestoreDataForContainer(IImageService service, string container)
+        public void RestoreDataForContainer(IImageService service, IContainerService container)
         {
             //todo: interfejs  kontener klienta - musi posiadac metode tabela w bazie danych //todo:orm
-            var dbImagesList = DbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container);
+            var dbImagesList = DbConnection.Open().Select<ImageData>(x=>x.ClientContainer==container.GetContainerName());
 
             //todo: wywalic setservicecontainer
-            service.SetServiceContainer(container);
-            var storageImages = service.GetBaseImagesDictionary();
+            //service.SetServiceContainer(container);
+            var storageImages = service.GetBaseImagesDictionary(new ContainerClass(container.GetContainerName()));
             //todo:  storageImages // imagesinstorage
             //todo:  odwrotna sytaucja plik jest w bazie nie ma go na dysku 
             List<string> absentFromDb = storageImages.Keys.Except(dbImagesList.Select(x => x.ImageName)).ToList();

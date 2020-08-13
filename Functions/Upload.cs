@@ -17,6 +17,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using ImageResizer.Entities;
 
 namespace ImageResizer
 {
@@ -30,10 +31,8 @@ namespace ImageResizer
         {
             var resp = new HttpResponseMessage();
             try
-            {  
-                var container = req.Form["container"];
-
-                if(req.Form.Files.Count==0 || container == string.Empty)
+            {
+                if(req.Form.Files.Count==0 || req.Form["container"] == string.Empty)
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
                     resp.Content = new StringContent("invalid request data");
@@ -42,6 +41,8 @@ namespace ImageResizer
 
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+
+                IContainerService container = new ContainerClass(req.Form["container"]);
 
                 if (!service.CheckIfContainerNameIsValid(container))
                 {
@@ -59,7 +60,7 @@ namespace ImageResizer
                         return resp;
                     }
 
-                    if (service.GetUploadImageSecurityKey(container, req.Form.Files[i].FileName, req.Form.Files[i].Length.ToString()) != req.Form.Files[i].Name)
+                    if (service.GetUploadImageSecurityKey(container.GetContainerName(), req.Form.Files[i].FileName, req.Form.Files[i].Length.ToString()) != req.Form.Files[i].Name)
                     {
                         resp.StatusCode = HttpStatusCode.Forbidden;
                         return resp;

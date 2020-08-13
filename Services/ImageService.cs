@@ -424,6 +424,21 @@ namespace ImageResizer.Services
             throw new NotImplementedException();
         }
 
+        public bool CheckIfContainerExists(IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfContainerNameIsValid(IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckIfImageExists(string imagePath, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool CheckIfContainerExists(string containerName)
         {
             throw new NotImplementedException();

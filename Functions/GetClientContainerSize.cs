@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using ImageResizer.Entities;
 
 namespace ImageResizer
 {
@@ -28,16 +29,17 @@ namespace ImageResizer
                 var resp = new HttpResponseMessage();
                 IImageService service =
                     Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-                if (!service.SetServiceContainer(container))
+                IContainerService containerService = new ContainerClass(container);
+                if (!service.CheckIfContainerExists(containerService))
                 {
                     resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Provided container is innvalid");
+                    resp.Content = new StringContent("Provided container is invalid");
                     return resp;
                 }
 
-                double ContainerSizeInMiB = Math.Round(service.GetImagesDictionarySize().Sum(x => x.Value) / (1024f * 1024f), 2);
+                double ContainerSizeInMiB = Math.Round(service.GetImagesDictionarySize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
                 resp.StatusCode = HttpStatusCode.OK;                               
-                resp.Content = new StringContent(JsonConvert.SerializeObject(value: new { ContainerName = container ,ContainerSizeMiB = ContainerSizeInMiB }));
+                resp.Content = new StringContent(JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName() ,ContainerSizeMiB = ContainerSizeInMiB }));
                 resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 return resp;
             }
