@@ -38,8 +38,7 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "invalid request data");
                 }
 
-                IImageService service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IImageService service = Utilities.Utilities.GetImageService();
 
                 IContainerService container = new ContainerClass(req.Form["container"]);
 
@@ -67,10 +66,8 @@ namespace ImageResizer
 
                 List<string> NotUploadedFiles = new List<string>();
 
-                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
                 
-                
-               
                     for (int i = 0; i < req.Form.Files.Count; i++)
                     {
                         string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
@@ -80,8 +77,7 @@ namespace ImageResizer
                             imagePath,
                             databaseService))
                             NotUploadedFiles.Add(req.Form.Files[i].FileName);
-                    }
-                
+                    }                
                  
                 if(NotUploadedFiles.Any())
                 {

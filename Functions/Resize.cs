@@ -34,10 +34,8 @@ namespace ImageResizer
 
             try
             {
-                IImageService service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(clientHash);
-
 
                 var requestedParameters = new QueryParameterValues(parameters);
                 
@@ -45,14 +43,12 @@ namespace ImageResizer
                 {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "invalid parameter values");
-                   
                 }
 
                 if(!service.ChceckIfFileIsSupported(image))
                 {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "Not supported image type");
-                  
                 }
 
                 if (!service.CheckIfContainerExists(containerService))
@@ -62,7 +58,6 @@ namespace ImageResizer
                 {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.NotFound, "Requested image doesn't exists");
-                    
                 }
 
                 //checks if watermark image exist if not watermark presence parameter is set to false
@@ -77,7 +72,7 @@ namespace ImageResizer
                 var imagePath = service.GetImagePathResize(requestedParameters, image);
 
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
-                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
                 var imageData = databaseService.GetImageData(image, containerService);
                                
                     flagIsInOryginalImageRange = 
@@ -135,9 +130,8 @@ namespace ImageResizer
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image),containerService))
                 {                    
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
-                    var mutadedImage = new MemoryStream();
                     
-                    mutadedImage = service.MutateImage(
+                    var mutadedImage = service.MutateImage(
                         imageFromStorage,
                         containerService,
                         requestedParameters.Width, 

@@ -14,32 +14,56 @@ namespace ImageResizer.Services
 {
     public class DatabaseService : IDatabaseService
     {
-        private readonly IImageService service;
+        private OrmLiteConnectionFactory DbConnection { get; set; }
+        private string DbConnString { get;  }
+        private IImageService _service;
 
-        public DatabaseService(string dbConnString)
+        public DatabaseService(string dbConnString,bool initialize)
         {
             DbConnString = dbConnString;
+            if(initialize)
+                Initialize();
+            else
+            {
+                if (CheckIfDbFileExist(DbConnString))
+                {
+                    DbConnection = SetDbConnection(DbConnString);
+                    _service =
+                        Utilities.Utilities.GetImageService("");//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                   
+                }
+                else
+                {
+                    CreateDatabase(DbConnString);
+                    DbConnection = SetDbConnection(DbConnString);
+                    _service =
+                        Utilities.Utilities.GetImageService(""); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+
+                }
+            }
+           
+        }
+
+        private void Initialize()
+        {
             if (CheckIfDbFileExist(DbConnString))
             {
                 DbConnection = SetDbConnection(DbConnString);
-                service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-                RestoreData(service);
-                CheckAndCorrectDbData(service);
+                _service =
+                    Utilities.Utilities.GetImageService("");//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                RestoreData(_service);
+                CheckAndCorrectDbData(_service);
             }
             else
             {
-                CreateDatabase(dbConnString);
+                CreateDatabase(DbConnString);
                 DbConnection = SetDbConnection(DbConnString);
-                service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                _service =
+                    Utilities.Utilities.GetImageService(""); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
-                RestoreData(service);
+                RestoreData(_service);
             }
         }
-
-        private OrmLiteConnectionFactory DbConnection { get; }
-        private string DbConnString { get; }
 
         public bool CheckIfDbFileExist(string databasePath)
         {
