@@ -1,0 +1,8 @@
+{
+  "DatabaseConnectionString": "Data Source=C:\\Users\\Tanatos\\source\\repos\\ImageResizer\\bin\\Debug\\netcoreapp3.1\\Database\\ImageResizerDB.db;Version=3;PRAGMA synchronous = OFF;PRAGMA cache_size=10000;",
+  "ContainerRemoveKey": "SomeApplicationKeyForHashingContainers",
+  "LocalStorageConnectionString": "E:\\imageresizer",
+  "LocalAzureStorageConnectionString": "UseDevelopmentStorage=true",
+  "DaysAfterImageCacheWillBeDeleted": "15",
+  "ApplicationEnvironment": "Local" //Azure / Local / LocalAzure 
+}

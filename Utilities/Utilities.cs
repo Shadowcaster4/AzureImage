@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -14,15 +15,19 @@ namespace ImageResizer.Utilities
     public static  class Utilities
     {
 
-        private static IConfigurationRoot _config = new ConfigurationBuilder().AddJsonFile(@".\AppSettings.json").Build();
+        private static IConfigurationRoot _config = new ConfigurationBuilder()
+            .AddJsonFile(@"C:\Users\Tanatos\source\repos\ImageResizer\Utilities\AppConfig.json").Build();
 
-        public static string ContainerRemoveKey = Environment.GetEnvironmentVariable("ContainerRemoveKey");
+        public static string ContainerRemoveKey = _config.GetSection("ContainerRemoveKey").Value;
 
         public static IImageService GetImageService(string environment="",string connectionString ="")
         {
-        
+            
+
             if (environment.IsNullOrEmpty())
                 environment = _config.GetSection("ApplicationEnvironment").Value;
+
+            var x = "";
 
             return environment switch
             {

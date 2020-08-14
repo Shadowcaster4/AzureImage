@@ -29,7 +29,7 @@ namespace ImageResizer.Services
                 {
                     DbConnection = SetDbConnection(DbConnString);
                     _service =
-                        Utilities.Utilities.GetImageService("");//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                        Utilities.Utilities.GetImageService();//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
                    
                 }
                 else
@@ -37,7 +37,7 @@ namespace ImageResizer.Services
                     CreateDatabase(DbConnString);
                     DbConnection = SetDbConnection(DbConnString);
                     _service =
-                        Utilities.Utilities.GetImageService(""); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                        Utilities.Utilities.GetImageService(); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
                 }
             }
@@ -50,16 +50,16 @@ namespace ImageResizer.Services
             {
                 DbConnection = SetDbConnection(DbConnString);
                 _service =
-                    Utilities.Utilities.GetImageService("");//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-                RestoreData(_service);
-                CheckAndCorrectDbData(_service);
+                    Utilities.Utilities.GetImageService();//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+            //    RestoreData(_service);
+            //    CheckAndCorrectDbData(_service);
             }
             else
             {
                 CreateDatabase(DbConnString);
                 DbConnection = SetDbConnection(DbConnString);
                 _service =
-                    Utilities.Utilities.GetImageService(""); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                    Utilities.Utilities.GetImageService(); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
 
                 RestoreData(_service);
             }
@@ -170,6 +170,14 @@ namespace ImageResizer.Services
             using (var database = new SQLiteConnection(dbConnString))
             {
                 database.Open();
+            }
+        }
+
+        public void DropTable()
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.DropTable<ImageData>();
             }
         }
 

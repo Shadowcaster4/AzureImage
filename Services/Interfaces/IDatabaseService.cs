@@ -16,5 +16,6 @@ namespace ImageResizer.Database
         void DeleteLetterDirectory(string imageName, IContainerService container);
         ImageData GetImageData(string imageName, IContainerService container);
         void SaveImagesData(List<ImageData> imageDataList);
+        void DropTable();
     }
 }

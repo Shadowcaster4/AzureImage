@@ -9,15 +9,15 @@ namespace ImageResizer.Services
         //storage connection
         protected readonly string _applicationConnectionString;
 
-        private IConfigurationRoot _config = new ConfigurationBuilder().AddJsonFile(@".\AppSettings.json").Build();
+        //private IConfigurationRoot _config = new ConfigurationBuilder().AddJsonFile(@".\ImageResizerConfig.json").Build();
         public BaseService()
         {
          
         _applicationConnectionString = Environment.GetEnvironmentVariable("ApplicationEnvironment") switch
             {
-                "Local" => _config.GetSection("LocalStorageConnectionString").Value,// Environment.GetEnvironmentVariable("LocalStorageConnectionString"),
-                "Azure" => _config.GetSection("AzureWebJobsStorage").Value,// Environment.GetEnvironmentVariable("AzureWebJobsStorage"),
-                "LocalAzure" => _config.GetSection("LocalAzureStorageConnectionString").Value, // Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"),
+                "Local" => Environment.GetEnvironmentVariable("LocalStorageConnectionString"),// Environment.GetEnvironmentVariable("LocalStorageConnectionString"),
+                "Azure" => Environment.GetEnvironmentVariable("AzureWebJobsStorage"),// Environment.GetEnvironmentVariable("AzureWebJobsStorage"),
+                "LocalAzure" => Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"), // Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"),
                 _ => "Connection string Error",
             };         
           
