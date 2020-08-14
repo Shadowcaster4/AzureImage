@@ -6,15 +6,21 @@ using System.Text;
 using ImageResizer.Database;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using ServiceStack;
 
 namespace ImageResizer.Utilities
 {
     public static  class Utilities
     {
+
+        private static IConfigurationRoot _config = new ConfigurationBuilder().AddJsonFile(@".\AppSettings.json").Build();
+
         public static string ContainerRemoveKey = Environment.GetEnvironmentVariable("ContainerRemoveKey");
         public static IImageService GetImageService(string? environment)
         {
+        
+
             if (environment.IsNullOrEmpty())
             {
                 var x = Environment.GetEnvironmentVariable("ApplicationEnvironment");

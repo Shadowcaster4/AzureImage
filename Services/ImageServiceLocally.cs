@@ -33,6 +33,11 @@ namespace ImageResizer.Services.Interfaces
             serviceClient = new DirectoryInfo(_applicationConnectionString);
         }
 
+        public ImageServiceLocally(string applicationConnectionString) : base(applicationConnectionString)
+        {
+            serviceClient = new DirectoryInfo(applicationConnectionString);
+        }
+
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
