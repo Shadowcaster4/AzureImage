@@ -22,6 +22,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ImageResizer.Database;
 using ImageResizer.Functions;
+using System.Configuration;
 
 namespace ImageResizer.Services
 {

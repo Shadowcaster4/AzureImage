@@ -16,7 +16,11 @@ namespace ImageResizer.Utilities
         public static IImageService GetImageService(string? environment)
         {
             if (environment.IsNullOrEmpty())
-                environment = Environment.GetEnvironmentVariable("ApplicationEnvironment");
+            {
+                var x = Environment.GetEnvironmentVariable("ApplicationEnvironment");
+                environment = x;
+            }
+             
 
             if (environment == "Local")
                 return new ImageServiceLocally();

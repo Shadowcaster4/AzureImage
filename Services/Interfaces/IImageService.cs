@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using ImageResizer.Database;
+using System.Configuration;
 
 namespace ImageResizer.Services.Interfaces
 {
