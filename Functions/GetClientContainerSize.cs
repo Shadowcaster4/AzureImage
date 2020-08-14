@@ -27,8 +27,7 @@ namespace ImageResizer
             try
             {
                 var resp = new HttpResponseMessage();
-                IImageService service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
                 if (!service.CheckIfContainerExists(containerService))
                 {

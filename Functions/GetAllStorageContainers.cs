@@ -30,8 +30,7 @@ namespace ImageResizer.Functions
             try
             {
                 var resp = new HttpResponseMessage();
-                IImageService service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IImageService service = Utilities.Utilities.GetImageService();
 
                 var containers = service.GetBlobContainers();
                 resp.StatusCode = HttpStatusCode.OK;

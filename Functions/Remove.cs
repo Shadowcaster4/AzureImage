@@ -29,16 +29,14 @@ namespace ImageResizer
             
             try
             {
-                
                 var resp = new HttpResponseMessage();
-                IImageService service =
-                    Utilities.Utilities.GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
+                IImageService service = Utilities.Utilities.GetImageService();
 
                 IContainerService containerService = new ContainerClass(req.Form["container"]);
 
                 resp.StatusCode = HttpStatusCode.Forbidden;
 
-                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService(null);
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
 
                 if (!service.CheckIfContainerExists(containerService))
                 {
