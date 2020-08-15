@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using ImageResizer.Database;
 using ImageResizer.Services;
@@ -62,7 +63,12 @@ namespace ImageResizer.Utilities
             return new HttpResponseMessage
             {
                 StatusCode = statusCode,
-                Content = new StringContent(ResponseMessage)
+                Content = new StringContent(ResponseMessage) 
+                    { Headers =
+                        {
+                            ContentType = new MediaTypeHeaderValue("application/json")
+                        }
+                    }
             };
         }
     }

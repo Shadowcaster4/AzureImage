@@ -26,23 +26,19 @@ namespace ImageResizer
         {
             try
             {
-                var resp = new HttpResponseMessage();
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
 
                 if (!service.CheckIfContainerExists(containerService))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("");
-                    resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    return resp;
+                   return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "");
                 }
                
                 var cloudImages = service.GetBaseImagesDictionary(containerService);
-                resp.StatusCode = HttpStatusCode.OK;
-                resp.Content =new StringContent(JsonConvert.SerializeObject(value: cloudImages));
-                resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                return resp;
+              
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: cloudImages));
             }
             catch (Exception e)
             {

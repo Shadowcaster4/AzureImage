@@ -81,10 +81,8 @@ namespace ImageResizer
                  
                 if(NotUploadedFiles.Any())
                 {
-                    resp.StatusCode = HttpStatusCode.MultiStatus;
-                    resp.Content = new StringContent(JsonConvert.SerializeObject(value:NotUploadedFiles));
-                    resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.MultiStatus, JsonConvert.SerializeObject(value: NotUploadedFiles));
                 }
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(

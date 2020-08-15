@@ -31,16 +31,14 @@ namespace ImageResizer
                 IContainerService containerService = new ContainerClass(container);
                 if (!service.CheckIfContainerExists(containerService))
                 {
-                    resp.StatusCode = HttpStatusCode.BadRequest;
-                    resp.Content = new StringContent("Provided container is invalid");
-                    return resp;
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
 
                 double ContainerSizeInMiB = Math.Round(service.GetImagesDictionarySize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
-                resp.StatusCode = HttpStatusCode.OK;                               
-                resp.Content = new StringContent(JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName() ,ContainerSizeMiB = ContainerSizeInMiB }));
-                resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                return resp;
+              
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName(), ContainerSizeMiB = ContainerSizeInMiB }));
             }
             catch (Exception e)
             {

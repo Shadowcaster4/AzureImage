@@ -33,13 +33,13 @@ namespace ImageResizer.Functions
                 IImageService service = Utilities.Utilities.GetImageService();
 
                 var containers = service.GetBlobContainers();
-                resp.StatusCode = HttpStatusCode.OK;
-                resp.Content = new StringContent(JsonConvert.SerializeObject(value: new {
-                    ContainersNames = containers
-                    .Where(x=>!x.Contains("azure-webjobs"))
+               
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new
+                    {
+                        ContainersNames = containers
                     }));
-                resp.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                return resp;
+
             }
             catch (Exception e)
             {
