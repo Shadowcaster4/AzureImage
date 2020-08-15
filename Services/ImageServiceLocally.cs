@@ -25,9 +25,7 @@ namespace ImageResizer.Services.Interfaces
     {
 
         private readonly DirectoryInfo serviceClient;
-             
-        
-                
+
         public ImageServiceLocally() : base()
         {
             serviceClient = new DirectoryInfo(_applicationConnectionString);
@@ -44,19 +42,7 @@ namespace ImageResizer.Services.Interfaces
             return Directory.Exists(GetContainerPath(container));
         }
 
-        public bool SetServiceContainer(IContainerService container)
-        {
-            if (!CheckIfContainerNameIsValid(container))
-                return false;
-
-            if (CheckIfContainerExists(container))
-            {
-               // containerClient = new DirectoryInfo(GetContainerPath(containerName));
-                return true;
-            }
-            return false;
-        }
-
+      
         private string GetContainerPath(IContainerService container)
         {
             return serviceClient.FullName + "\\" + container.GetContainerName();
@@ -67,21 +53,15 @@ namespace ImageResizer.Services.Interfaces
             return GetContainerPath(container) + "\\" + filePath;
         }
 
-        /*   private string GetContainerPath(string serviceClientFullPath, string containerName)
-        {
-            return serviceClientFullPath + "\\" + containerName;
-        }
-     */
+     
         private DirectoryInfo  GetServiceContainer(IContainerService container)
         {
             if (!CheckIfContainerNameIsValid(container))
                 throw new Exception("Invalid container name");
 
             if (CheckIfContainerExists(container))
-            {
                 return new DirectoryInfo(GetContainerPath(container));
-                
-            }
+            
             throw new Exception("container doesnt exists");
         }
 
@@ -124,26 +104,14 @@ namespace ImageResizer.Services.Interfaces
                     ));
         }
 
-        public bool SetImageObject(string imagePath, string clientContainerName)
-        {
-           // return CheckIfImageExists(imagePath,clientContainerName);
-           return true;
-        }
-
+       
         public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
         {
             var containerClient = GetServiceContainer(container);
 
-            Dictionary<string, long> imagesDictionary = new Dictionary<string, long>();
-
             var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories);
 
-            foreach (var file in myContainerFiles)
-            {
-                imagesDictionary.Add(file.Name, file.Length);
-            }
-
-            return imagesDictionary;
+            return myContainerFiles.ToDictionary(file => file.FullName, file => file.Length);
         }
 
         public bool DeleteCachedImage(string imagePath,IContainerService container)
@@ -174,9 +142,16 @@ namespace ImageResizer.Services.Interfaces
         {
            // Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
            // GetLocalFiles(myBaseImagesDictionary, GetContainerPath(container), 2);
-            
-            Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
-            return true;
+           try
+           {
+               Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
+               return true;
+           }
+           catch (Exception e)
+           {
+               return false;
+           }
+           
         }
 
 
@@ -224,7 +199,7 @@ namespace ImageResizer.Services.Interfaces
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height,ImageData imageData)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height,ImageData imageData)
         {
                return width <= imageData.Width || height <= imageData.Height;
         }
@@ -239,6 +214,7 @@ namespace ImageResizer.Services.Interfaces
 
         public string GetImagePathUpload(string fileName)
         {
+            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
             return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
         }
 

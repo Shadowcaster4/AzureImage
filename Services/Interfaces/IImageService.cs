@@ -18,7 +18,7 @@ namespace ImageResizer.Services.Interfaces
         bool CheckIfContainerNameIsValid(IContainerService container);
         bool CheckIfImageExists(string imagePath, IContainerService container);
         bool CheckIfParametersAreInRange(int width, int height);
-        bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData);
+        bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData);
         bool CreateUsersContainer(IContainerService clientContainer);
         bool DeleteCachedImage(string imagePath, IContainerService container);
         bool DeleteClientContainer(IContainerService clientContainer);

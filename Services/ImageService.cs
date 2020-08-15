@@ -206,7 +206,7 @@ namespace ImageResizer.Services
             return true;
         }
 
-        public bool CheckIfImageRequestedImageResolutionIsInRange(string imageName, int width, int height, ImageData imageData)
+        public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData)
         {
             return width <= imageData.Width || height <= imageData.Height;
         }

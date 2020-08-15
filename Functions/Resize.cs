@@ -77,7 +77,6 @@ namespace ImageResizer
                                
                     flagIsInOryginalImageRange = 
                         service.CheckIfImageRequestedImageResolutionIsInRange(
-                            image, 
                             requestedParameters.Width, 
                             requestedParameters.Height, 
                             imageData);
