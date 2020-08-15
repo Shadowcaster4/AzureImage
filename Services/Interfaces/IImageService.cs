@@ -39,7 +39,7 @@ namespace ImageResizer.Services.Interfaces
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
        // bool SetImageObject(string imagePath, string clientContainerName);
        // bool SetServiceContainer(string containerName);
-        bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService);
+        ImageData UploadImage(Stream image, IContainerService container, string imagePath);
 
         string Test(string fileName);
     }

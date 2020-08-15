@@ -71,5 +71,22 @@ namespace ImageResizer.Utilities
                     }
             };
         }
+
+        public static HttpResponseMessage GetImageHttpResponseMessage(MemoryStream tmpImg,string imageName,string imageExtension)
+        {
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new ByteArrayContent(tmpImg.GetBuffer());
+            response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
+            {
+                FileName = imageName
+            };
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
+            response.Headers.CacheControl = new CacheControlHeaderValue()
+            {
+                Public = true,
+                MaxAge = new TimeSpan(14, 0, 0, 0)
+            };
+            return response;
+        }
     }
 }

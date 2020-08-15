@@ -18,6 +18,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using ImageResizer.Entities;
+using ServiceStack;
 
 namespace ImageResizer
 {
@@ -32,7 +33,7 @@ namespace ImageResizer
             var resp = new HttpResponseMessage();
             try
             {
-                if(req.Form.Files.Count==0 || req.Form["container"] == string.Empty)
+                if(!req.Form.Files.Any() || req.Form["container"] == string.Empty)
                 {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "invalid request data");
@@ -48,42 +49,50 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "invalid container name");
                 }
 
-                for(int i=0;i<req.Form.Files.Count;i++)
+                foreach (var imageFile in req.Form.Files)
                 {
-                    if (!service.ChceckIfFileIsSupported(req.Form.Files[i].FileName))
+                    if (!service.ChceckIfFileIsSupported(imageFile.FileName))
                     {
                         return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                             HttpStatusCode.BadRequest, "invalid image format");
                     }
 
-                    if (service.GetUploadImageSecurityKey(container.GetContainerName(), req.Form.Files[i].FileName, req.Form.Files[i].Length.ToString()) != req.Form.Files[i].Name)
+                    if (service.GetUploadImageSecurityKey(container.GetContainerName(), imageFile.FileName, imageFile.Length.ToString()) != imageFile.Name)
                     {
                         return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                             HttpStatusCode.Forbidden, "");
                       
-                    }                    
+                    }
                 }
 
-                List<string> NotUploadedFiles = new List<string>();
+                List<string> notUploadedFiles = new List<string>();
+                List<ImageData> filesToUpload = new List<ImageData>();
 
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
-                
-                    for (int i = 0; i < req.Form.Files.Count; i++)
-                    {
-                        string imagePath = service.GetImagePathUpload(req.Form.Files[i].FileName);
-                        if (!service.UploadImage(
-                            req.Form.Files.GetFile(req.Form.Files[i].Name).OpenReadStream(),
-                            container,
-                            imagePath,
-                            databaseService))
-                            NotUploadedFiles.Add(req.Form.Files[i].FileName);
-                    }                
-                 
-                if(NotUploadedFiles.Any())
+             
+                foreach (var imageToUpload in req.Form.Files)
                 {
-                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.MultiStatus, JsonConvert.SerializeObject(value: NotUploadedFiles));
+                    string imagePath = service.GetImagePathUpload(imageToUpload.FileName);
+                    ImageData uploadResult = service.UploadImage(
+                        req.Form.Files.GetFile(imageToUpload.Name).OpenReadStream(),
+                        container,
+                        imagePath);
+
+                    if (uploadResult.ImageName.IsNullOrEmpty())
+                        notUploadedFiles.Add(imageToUpload.FileName);
+                    else
+                    {
+                        filesToUpload.Add(uploadResult);
+                    }
                 }
+                
+                if(filesToUpload.Any())
+                    databaseService.SaveImagesData(filesToUpload);
+
+                if (notUploadedFiles.Any())
+                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                        HttpStatusCode.MultiStatus, JsonConvert.SerializeObject(value: notUploadedFiles));
+                
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.Created, "Uploaded successfully");

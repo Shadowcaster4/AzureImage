@@ -87,19 +87,7 @@ namespace ImageResizer
                     if(!requestedParameters.WatermarkPresence)
                     {
                         var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
-                        HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-                        response.Content = new ByteArrayContent(tmpImg.GetBuffer());
-                        response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
-                        {
-                            FileName = image
-                        };
-                        response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
-                        response.Headers.CacheControl = new CacheControlHeaderValue()
-                        {
-                            Public = true,
-                            MaxAge = new TimeSpan(14, 0, 0, 0)
-                        };
-                        return response;
+                        return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, image, imageExtension);
                     }
                     string newParametersValues = "0,0";
                     var oversizeImageParameters = new QueryParameterValues(newParametersValues);
@@ -111,19 +99,7 @@ namespace ImageResizer
                 if (service.CheckIfImageExists(imagePath,containerService))
                 {
                     var tmpImg = service.DownloadImageFromStorageToStream(imagePath,containerService);
-                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-                    response.Content = new ByteArrayContent(tmpImg.GetBuffer());
-                    response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
-                    {
-                        FileName = image
-                    };
-                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/"+imageExtension);
-                    response.Headers.CacheControl = new CacheControlHeaderValue()
-                    {
-                        Public = true,
-                        MaxAge = new TimeSpan(14, 0, 0, 0)
-                    };
-                    return response;
+                    return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, image, imageExtension);
                 }
 
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image),containerService))
@@ -141,19 +117,7 @@ namespace ImageResizer
 
                     service.SaveImage(mutadedImage, imagePath,containerService);
 
-                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-                    response.Content = new ByteArrayContent(mutadedImage.GetBuffer());
-                    response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("inline")
-                    {
-                        FileName = image
-                    };
-                    response.Content.Headers.ContentType = new MediaTypeHeaderValue("image/" + imageExtension);
-                    response.Headers.CacheControl = new CacheControlHeaderValue()
-                    {
-                        Public = true,
-                        MaxAge = new TimeSpan(14, 0, 0, 0)
-                    };
-                    return response;
+                    return Utilities.Utilities.GetImageHttpResponseMessage(mutadedImage, image, imageExtension);
 
                 }
                 

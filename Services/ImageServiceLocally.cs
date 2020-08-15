@@ -67,8 +67,13 @@ namespace ImageResizer.Services.Interfaces
 
         public List<string> GetBlobContainers()
         {
-            return serviceClient.GetDirectories().Select(x => x.Name).ToList();
+            return serviceClient.GetDirectories()
+                .Select(x => x.Name)
+                .Where(x=>CheckIfContainerNameIsValid(
+                    new ContainerClass(x))
+                ).ToList();
         }
+
 
         public bool DeleteClientContainer(IContainerService clientContainer)
         {
@@ -173,32 +178,33 @@ namespace ImageResizer.Services.Interfaces
             };
         }
 
-        public bool UploadImage(Stream image, IContainerService container, string imagePath, IDatabaseService dbService)
+        public ImageData UploadImage(Stream image, IContainerService container, string imagePath)
         {
            
             if (!CheckIfContainerExists(container))
                 CreateUsersContainer(container);
-            var containerClient = GetServiceContainer(container);
+           // var containerClient = GetServiceContainer(container);
 
             if (CheckIfImageExists(imagePath,container))
-                return false;
+                return new ImageData();
 
             var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
 
-            image.Position = 0;
+            
 
             string fullPath = GetFullFilePath(container,imagePath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
             using (FileStream uploadImage = File.Create(fullPath))
             {
+                image.Position = 0;
                 MemoryStream tmpStream = new MemoryStream();
                 image.CopyTo(tmpStream);
                 tmpStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
             }
-            dbService.SaveImagesData(new List<ImageData>(){imageData});
+           // dbService.SaveImagesData(new List<ImageData>(){imageData});
             image.Dispose();
-            return true;
+            return imageData;
         }
 
         public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height,ImageData imageData)

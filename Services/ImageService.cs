@@ -187,23 +187,22 @@ namespace ImageResizer.Services
             };
         }
 
-        public bool UploadImage(Stream image, IContainerService container,  string imagePath, IDatabaseService dbService)
+        public ImageData UploadImage(Stream image, IContainerService container,  string imagePath)
         {
             if (!CheckIfContainerExists(container))
               CreateUsersContainer(container);
               
             if (CheckIfImageExists(imagePath,container))
-                return false;
-            
+                return new ImageData();
+
             var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
             
             image.Position = 0;
 
             GetServiceContainer(container).UploadBlob(imagePath, image);
-
-            dbService.SaveImagesData(new List<ImageData>() { imageData });
+            
             image.Dispose();
-            return true;
+            return imageData;
         }
 
         public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData)
