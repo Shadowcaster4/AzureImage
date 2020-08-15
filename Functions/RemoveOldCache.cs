@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ImageResizer.Entities;
+using SixLabors.ImageSharp.Drawing;
 
 namespace ImageResizer
 {
@@ -35,13 +36,16 @@ namespace ImageResizer
 
                 var cachedImagesDictionary = service.GetCachedImagesDictionary(containerService);
                 bool flag = true;
-                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
+               // int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
+               int DaysAfterImageCacheWillBeDeleted = 1;
 
                 foreach (var item in cachedImagesDictionary)
                 {
                     if (item.Value < DateTime.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
                         if (!service.DeleteCachedImage(item.Key,containerService))
                             flag = false;
+
+                    
                 }
 
                 if (!flag)

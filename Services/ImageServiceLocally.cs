@@ -128,10 +128,12 @@ namespace ImageResizer.Services.Interfaces
 
         public bool DeleteImageDirectory(string directoryName,IContainerService container)
         {
-            if (File.Exists(GetFullFilePath(container, GetImagePathUpload(directoryName))))
+            var fileToDelete = new FileInfo(GetFullFilePath(container, GetImagePathUpload(directoryName)));
+
+            if (fileToDelete.Exists)
             {
-                string directoryPath = GetFullFilePath(container, GetImagePathUpload(directoryName));
-                directoryPath = directoryPath.Substring(0, directoryPath.LastIndexOf("\\"));
+                string directoryPath = fileToDelete.DirectoryName+"\\"+fileToDelete.Name.Replace(".","");
+                fileToDelete.Delete();
                 Directory.Delete(directoryPath, true);
                 return true;
             }
@@ -214,8 +216,8 @@ namespace ImageResizer.Services.Interfaces
 
         public string GetImagePathUpload(string fileName)
         {
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
+            return fileName[0] + "\\"  + fileName;
+           // return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
         }
 
         public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
@@ -224,7 +226,7 @@ namespace ImageResizer.Services.Interfaces
 
             Dictionary<string, LocalFileInfo> myBaseImagesDictionary = new Dictionary<string, LocalFileInfo>();
 
-            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 2);
+            GetLocalFiles(myBaseImagesDictionary, containerClient.FullName, 1);
             return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
         }
 
@@ -234,7 +236,13 @@ namespace ImageResizer.Services.Interfaces
             var containerClient = GetServiceContainer(container);
             GetLocalFiles(cachedImages, containerClient.FullName, 3);
 
-            return cachedImages.ToDictionary(x => x.Key, x => x.Value.Date);
+            return cachedImages.ToDictionary(x =>FindLetterPath(x.Key), x => x.Value.Date);
+        }
+
+        private string FindLetterPath(string path)
+        {
+            var xyz = String.Join(@"\", path.Split('\\').Skip(3));
+            return xyz;
         }
 
 
@@ -328,8 +336,12 @@ namespace ImageResizer.Services.Interfaces
                 Image<Rgba32> imageContainer = new Image<Rgba32>(width, height, Color.FromRgb(255, 0, 0));
                 if (image.Width < imageContainer.Width)
                     imageContainer.Mutate(x => x.DrawImage(image, new Point((imageContainer.Width / 2) - (image.Width / 2), 0), 1.0f));
-                if (image.Height < imageContainer.Height)
-                    imageContainer.Mutate(x => x.DrawImage(image, new Point(0, (imageContainer.Height / 2) - (image.Height / 2)), 1.0f));
+                else if (image.Height < imageContainer.Height)
+                    imageContainer.Mutate(x =>
+                        x.DrawImage(image, new Point(0, (imageContainer.Height / 2) - (image.Height / 2)), 1.0f));
+                else
+                    imageContainer = image;
+
                 image = imageContainer;
             }
             var output = new MemoryStream();

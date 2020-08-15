@@ -90,18 +90,18 @@ namespace ImageResizer.Functions
 
             // IDbConnection dbConnection = dbConnection = new SQLiteConnection(Environment.GetEnvironmentVariable("DatabaseConnectionString"));
 
-            var watch = new Stopwatch();
-            watch.Start();
+         //   var watch = new Stopwatch();
+         //   watch.Start();
 
-            IDatabaseService databaseService = new DatabaseService(Environment.GetEnvironmentVariable("DatabaseConnectionString"),true);
+         //   IDatabaseService databaseService = new DatabaseService(Environment.GetEnvironmentVariable("DatabaseConnectionString"),true);
             
-            watch.Stop();         
+        //    watch.Stop();         
         
 
 
             //dbImagesList = dbImagesList.Select(x => x.ToString());
 
-            return new OkObjectResult(watch.ElapsedMilliseconds);
+            return new OkObjectResult("xD");
         }
     }
 }
