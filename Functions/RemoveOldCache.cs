@@ -24,7 +24,6 @@ namespace ImageResizer
         {
             try
             {
-                var resp = new HttpResponseMessage();
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
 
@@ -36,28 +35,22 @@ namespace ImageResizer
 
                 var cachedImagesDictionary = service.GetCachedImagesDictionary(containerService);
                 bool flag = true;
-               // int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
-               int DaysAfterImageCacheWillBeDeleted = 1;
+                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
+              // int DaysAfterImageCacheWillBeDeleted = 1;
 
                 foreach (var item in cachedImagesDictionary)
                 {
                     if (item.Value < DateTime.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
                         if (!service.DeleteCachedImage(item.Key,containerService))
                             flag = false;
-
-                    
                 }
 
                 if (!flag)
-                {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.InternalServerError, "Something went wrong not all files could be deleted");
-                }
-                else
-                {
-                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.OK, "Old Cache was successfully removed");
-                }                 
+
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.OK, "Old Cache was successfully removed");
 
             }
             catch (Exception e)

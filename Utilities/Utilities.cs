@@ -16,10 +16,10 @@ namespace ImageResizer.Utilities
     public static  class Utilities
     {
 
-        private static IConfigurationRoot _config = new ConfigurationBuilder()
+        private static readonly IConfigurationRoot _config = new ConfigurationBuilder()
             .AddJsonFile(@"C:\Users\Tanatos\source\repos\ImageResizer\Utilities\AppConfig.json").Build();
 
-        public static string ContainerRemoveKey = _config.GetSection("ContainerRemoveKey").Value;
+        public static readonly string ContainerRemoveKey = _config.GetSection("ContainerRemoveKey").Value;
 
         public static IImageService GetImageService(string environment="",string connectionString ="")
         {
@@ -58,12 +58,12 @@ namespace ImageResizer.Utilities
 
       
 
-        public static HttpResponseMessage GetHttpResponseMessage_ReturnsStatusCodeAndMessage(HttpStatusCode statusCode,string ResponseMessage)
+        public static HttpResponseMessage GetHttpResponseMessage_ReturnsStatusCodeAndMessage(HttpStatusCode statusCode,string responseMessage)
         {
             return new HttpResponseMessage
             {
                 StatusCode = statusCode,
-                Content = new StringContent(ResponseMessage) 
+                Content = new StringContent(responseMessage) 
                     { Headers =
                         {
                             ContentType = new MediaTypeHeaderValue("application/json")

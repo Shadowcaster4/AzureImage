@@ -51,7 +51,7 @@ namespace ImageResizer
 
                 foreach (var imageFile in req.Form.Files)
                 {
-                    if (!service.ChceckIfFileIsSupported(imageFile.FileName))
+                    if (!service.CheckIfFileIsSupported(imageFile.FileName))
                     {
                         return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                             HttpStatusCode.BadRequest, "invalid image format");

@@ -29,12 +29,10 @@ namespace ImageResizer
             
             try
             {
-                var resp = new HttpResponseMessage();
+                
                 IImageService service = Utilities.Utilities.GetImageService();
 
                 IContainerService containerService = new ContainerClass(req.Form["container"]);
-
-                resp.StatusCode = HttpStatusCode.Forbidden;
 
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
 
@@ -124,8 +122,9 @@ namespace ImageResizer
 
                 }
 
-                return resp;               
-                
+                return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
+                    HttpStatusCode.Forbidden, "");
+
             }
             catch (Exception e)
             {

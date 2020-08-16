@@ -28,17 +28,17 @@ namespace ImageResizer.Services
 {
     public class ImageService : BaseService, IImageService
     {
-        private readonly BlobServiceClient blobServiceClient;
+        private readonly BlobServiceClient _blobServiceClient;
         //private BlobContainerClient blobContainerClient;
         //private BlobBaseClient blobBaseClient;
         public ImageService(string applicationConnectionString) : base(applicationConnectionString)
         {
-            blobServiceClient = new BlobServiceClient(applicationConnectionString);            
+            _blobServiceClient = new BlobServiceClient(applicationConnectionString);            
         }
 
         public ImageService() : base()
         {
-            blobServiceClient = new BlobServiceClient(base._applicationConnectionString);            
+            _blobServiceClient = new BlobServiceClient(base._applicationConnectionString);            
         }
 
         private BlobContainerClient GetServiceContainer(IContainerService container)
@@ -48,7 +48,7 @@ namespace ImageResizer.Services
 
             if (CheckIfContainerExists(container))
             {
-                return blobServiceClient.GetBlobContainerClient(container.GetContainerName());
+                return _blobServiceClient.GetBlobContainerClient(container.GetContainerName());
             }
             throw new Exception("container doesnt exists");
         }
@@ -56,7 +56,7 @@ namespace ImageResizer.Services
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
-            if (blobServiceClient.GetBlobContainerClient(container.GetContainerName()).Exists())
+            if (_blobServiceClient.GetBlobContainerClient(container.GetContainerName()).Exists())
             {
                 return true;
             }
@@ -65,14 +65,14 @@ namespace ImageResizer.Services
       
         public List<string> GetBlobContainers()
         {
-            return blobServiceClient.GetBlobContainers().Select(x=>x.Name).Where(x => !x.Contains("azure-webjobs")).ToList();            
+            return _blobServiceClient.GetBlobContainers().Select(x=>x.Name).Where(x => !x.Contains("azure-webjobs")).ToList();            
         }
 
         public bool DeleteClientContainer(IContainerService container)
         {
             if (CheckIfContainerExists(container))
             {
-                blobServiceClient.DeleteBlobContainer(container.GetContainerName());
+                _blobServiceClient.DeleteBlobContainer(container.GetContainerName());
                 return true;
             }
             return false;
@@ -82,7 +82,7 @@ namespace ImageResizer.Services
         {
             if (CheckIfContainerExists(clientContainer))
                 return false;
-            blobServiceClient.CreateBlobContainer(clientContainer.GetContainerName(), PublicAccessType.Blob);
+            _blobServiceClient.CreateBlobContainer(clientContainer.GetContainerName(), PublicAccessType.Blob);
             return true;
         }
 
@@ -96,20 +96,10 @@ namespace ImageResizer.Services
 
         public BlobBaseClient GetBlobImage(string imagePath, IContainerService container)
         {
-            //return GetServiceContainer(container).GetBlobBaseClient(imagePath);
-            return new BlobBaseClient(_applicationConnectionString,container.GetContainerName(),imagePath);
+            return GetServiceContainer(container).GetBlobBaseClient(imagePath);
+            //return new BlobBaseClient(_applicationConnectionString,container.GetContainerName(),imagePath);
         }
-        /*
-        public bool SetImageObject(string imagePath)
-        {
-            if (CheckIfImageExists(imagePath))
-            {
-                blobBaseClient = blobContainerClient.GetBlobBaseClient(imagePath);
-                return true;
-            }
-            return false;         
-        }
-        */
+    
         public Azure.Pageable<BlobItem> GetImagesFromContainer(IContainerService clientContainer)
         {
             try
@@ -213,7 +203,7 @@ namespace ImageResizer.Services
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)
         {            
             if(parameters.WatermarkPresence)
-            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "/" + fileName;
+                return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "/" + fileName;
 
             return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "/" + fileName;
         }
@@ -230,13 +220,13 @@ namespace ImageResizer.Services
             var blobs = GetServiceContainer(container)
                 .GetBlobs().Where(x=>x.Name.Count(element=>element=='/')==2);
 
-            var BaseImagesDictionary =new Dictionary<string, CloudFileInfo>();
+            var baseImagesDictionary =new Dictionary<string, CloudFileInfo>();
 
             foreach(BlobItem image in blobs)
             {
-                BaseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Properties.ContentLength?? 0, image.Properties.CreatedOn.Value.UtcDateTime));
+                baseImagesDictionary.Add(Path.GetFileName(image.Name), new CloudFileInfo(image.Properties.ContentLength?? 0, image.Properties.CreatedOn.Value.UtcDateTime));
             }    
-            return BaseImagesDictionary;
+            return baseImagesDictionary;
         }
 
         public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
@@ -245,14 +235,14 @@ namespace ImageResizer.Services
                 throw new Exception("Blob container is not set");
             var blobs = GetServiceContainer(container)
                 .GetBlobs().Where(x => x.Name.Count(element => element == '/') > 2);
-            var CachedImagesDictionary = new Dictionary<string, DateTime>();
+            var cachedImagesDictionary = new Dictionary<string, DateTime>();
 
             foreach (BlobItem image in blobs)
             {
-                CachedImagesDictionary.Add(image.Name, image.Properties.CreatedOn.Value.DateTime);
+                cachedImagesDictionary.Add(image.Name, image.Properties.CreatedOn.Value.DateTime);
             }
             
-            return CachedImagesDictionary;
+            return cachedImagesDictionary;
         }
         #endregion
 
@@ -262,10 +252,6 @@ namespace ImageResizer.Services
         {
             MemoryStream outputStream = new MemoryStream();
             GetBlobImage(imagePath,container).DownloadTo(outputStream);
-            //BlobDownloadInfo downloadInfo = GetBlobImage(imagePath,container).DownloadTo(outputStream);
-
-           // MemoryStream outputStream = new MemoryStream();
-           // downloadInfo.Content.CopyTo(outputStream);
             return outputStream;
         }
 
@@ -282,7 +268,7 @@ namespace ImageResizer.Services
         }
 
       
-        public MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int heigth, bool padding, string fileFormat, bool watermark)
+        public MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int height, bool padding, string fileFormat, bool watermark)
         {
             Image<Rgba32> image = (Image<Rgba32>)Image.Load(imageFromStorage.ToArray());       
 
@@ -301,12 +287,12 @@ namespace ImageResizer.Services
 
             }
 
-            if (width > 0 && heigth > 0)
+            if (width > 0 && height > 0)
             {
                 image.Mutate(x => x.Resize(new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(width, heigth)
+                    Size = new Size(width, height)
                 }));
             }
 
@@ -321,11 +307,14 @@ namespace ImageResizer.Services
                     image = whiteBackgroundForPngImage;
                 }
                 //var
-                Image<Rgba32> imageContainer = new Image<Rgba32>(width, heigth, Color.FromRgb(255, 0, 0));
+                Image<Rgba32> imageContainer = new Image<Rgba32>(width, height, Color.FromRgb(255, 0, 0));
                 if (image.Width < imageContainer.Width)
                     imageContainer.Mutate(x => x.DrawImage(image, new Point((imageContainer.Width / 2) - (image.Width / 2), 0), 1.0f));
-                if (image.Height < imageContainer.Height)
-                    imageContainer.Mutate(x => x.DrawImage(image, new Point(0, (imageContainer.Height / 2) - (image.Height / 2)), 1.0f));
+                else if (image.Height < imageContainer.Height)
+                    imageContainer.Mutate(x =>
+                        x.DrawImage(image, new Point(0, (imageContainer.Height / 2) - (image.Height / 2)), 1.0f));
+                else
+                    imageContainer = image;
                 image = imageContainer;
             }
             var output = new MemoryStream();
@@ -351,7 +340,7 @@ namespace ImageResizer.Services
             return Regex.IsMatch(container.GetContainerName(), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");          
         }
 
-        public bool ChceckIfFileIsSupported(string fileName)
+        public bool CheckIfFileIsSupported(string fileName)
         {
             return (fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif"));        
         }
@@ -374,7 +363,8 @@ namespace ImageResizer.Services
         {
             return (width > 2000 || width < 10 || height > 2000 || height < 10);
         }
-        public string HashMyString(string stringToHash)
+
+        private string HashMyString(string stringToHash)
         {
             var data = Encoding.ASCII.GetBytes(stringToHash);
             var hashData = new SHA1Managed().ComputeHash(data);
@@ -400,12 +390,7 @@ namespace ImageResizer.Services
 
         #endregion
 
-        public string Test(string fileName)
-        {
-           // var x = directoryContainerClient.FullName;
-            var x = fileName;
-            return x;
-        }
+       
        
     }
 }

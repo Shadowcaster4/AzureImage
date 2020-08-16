@@ -28,17 +28,11 @@ namespace ImageResizer.Services
                 if (CheckIfDbFileExist(DbConnString))
                 {
                     DbConnection = SetDbConnection(DbConnString);
-                    _service =
-                        Utilities.Utilities.GetImageService();//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-                   
                 }
                 else
                 {
                     CreateDatabase(DbConnString);
                     DbConnection = SetDbConnection(DbConnString);
-                    _service =
-                        Utilities.Utilities.GetImageService(); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-
                 }
             }
            
@@ -49,18 +43,15 @@ namespace ImageResizer.Services
             if (CheckIfDbFileExist(DbConnString))
             {
                 DbConnection = SetDbConnection(DbConnString);
-                _service =
-                    Utilities.Utilities.GetImageService();//Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-            //    RestoreData(_service);
-            //    CheckAndCorrectDbData(_service);
+                IImageService service = Utilities.Utilities.GetImageService();
+            //    RestoreData(service);
+            //    CheckAndCorrectDbData(service);
             }
             else
             {
                 CreateDatabase(DbConnString);
                 DbConnection = SetDbConnection(DbConnString);
-                _service =
-                    Utilities.Utilities.GetImageService(); //GetImageService(Environment.GetEnvironmentVariable("ApplicationEnvironment"));
-
+                IImageService service = Utilities.Utilities.GetImageService(); 
                 RestoreData(_service);
             }
         }
@@ -101,7 +92,6 @@ namespace ImageResizer.Services
         {
             using (var db = DbConnection.Open())
             {
-                //  return db.Select<ImageData>(x => x.ImageName == imageName).First(); //&& x.ClientContainer == container);
                 return db.Single<ImageData>(x =>
                     x.ClientContainer == container.GetContainerName() && x.ImageName == imageName);
             }
@@ -110,7 +100,6 @@ namespace ImageResizer.Services
         public void RestoreData(IImageService imageService)
         {
             CreateTableIfNotExists();
-
 
             Parallel.ForEach(imageService.GetBlobContainers(),
                 container => { RestoreDataForContainer(imageService, new ContainerClass(container)); });
@@ -165,7 +154,7 @@ namespace ImageResizer.Services
             return new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
         }
 
-        public void CreateDatabase(string dbConnString)
+        private void CreateDatabase(string dbConnString)
         {
             using (var database = new SQLiteConnection(dbConnString))
             {
@@ -181,7 +170,7 @@ namespace ImageResizer.Services
             }
         }
 
-        public string GetDbFilePathFromConnString(string dbConnString)
+        private string GetDbFilePathFromConnString(string dbConnString)
         {
             return dbConnString.Substring(dbConnString.IndexOf('=') + 1,
                 dbConnString.IndexOf(';') - dbConnString.IndexOf('=') - 1);
@@ -220,14 +209,14 @@ namespace ImageResizer.Services
                 container);
             openImage.Position = 0;
 
-            var imageSize = GetFileResolution.GetDimensions(new BinaryReader(openImage));
+            var (width, height) = GetFileResolution.GetDimensions(new BinaryReader(openImage));
 
             var imageData = new ImageData
             {
                 ImageName = Path.GetFileName(imageName),
                 ClientContainer = container.GetContainerName(),
-                Width = imageSize.Width,
-                Height = imageSize.Height,
+                Width = width,
+                Height = height,
                 Size = openImage.Length.ToString()
             };
             openImage.Dispose();

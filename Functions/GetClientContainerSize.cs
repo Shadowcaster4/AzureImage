@@ -26,7 +26,6 @@ namespace ImageResizer
         {
             try
             {
-                var resp = new HttpResponseMessage();
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
                 if (!service.CheckIfContainerExists(containerService))
@@ -35,10 +34,10 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
 
-                double ContainerSizeInMiB = Math.Round(service.GetImagesDictionarySize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
+                double containerSizeInMiB = Math.Round(service.GetImagesDictionarySize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
               
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName(), ContainerSizeMiB = ContainerSizeInMiB }));
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName(), ContainerSizeMiB = containerSizeInMiB }));
             }
             catch (Exception e)
             {

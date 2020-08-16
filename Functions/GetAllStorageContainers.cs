@@ -29,7 +29,6 @@ namespace ImageResizer.Functions
         {
             try
             {
-                var resp = new HttpResponseMessage();
                 IImageService service = Utilities.Utilities.GetImageService();
 
                 var containers = service.GetBlobContainers();

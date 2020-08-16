@@ -12,9 +12,9 @@ namespace ImageResizer.Functions
 {
     public class GetFileResolution
     {
-        const string errorMessage = "Could not recognise image format.";
+        private const string ErrorMessage = "Could not recognise image format.";
 
-        private static Dictionary<byte[], Func<BinaryReader, Size>> imageFormatDecoders = new Dictionary<byte[], Func<BinaryReader, Size>>()
+        private static readonly Dictionary<byte[], Func<BinaryReader, Size>> ImageFormatDecoders = new Dictionary<byte[], Func<BinaryReader, Size>>()
         {
             { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, DecodePng },
             { new byte[] { 0xff, 0xd8 }, DecodeJfif },
@@ -24,12 +24,12 @@ namespace ImageResizer.Functions
 
         public static Size GetDimensions(BinaryReader binaryReader)
         {
-            int maxMagicBytesLength = imageFormatDecoders.Keys.OrderByDescending(x => x.Length).First().Length;
+            int maxMagicBytesLength = ImageFormatDecoders.Keys.OrderByDescending(x => x.Length).First().Length;
             byte[] magicBytes = new byte[maxMagicBytesLength];
             for (int i = 0; i < maxMagicBytesLength; i += 1)
             {
                 magicBytes[i] = binaryReader.ReadByte();
-                foreach (var kvPair in imageFormatDecoders)
+                foreach (var kvPair in ImageFormatDecoders)
                 {
                     if (StartsWith(magicBytes, kvPair.Key))
                     {
@@ -38,7 +38,7 @@ namespace ImageResizer.Functions
                 }
             }
 
-            throw new ArgumentException(errorMessage, "binaryReader");
+            throw new ArgumentException(ErrorMessage, "binaryReader");
         }
 
         private static bool StartsWith(byte[] thisBytes, byte[] thatBytes)
@@ -115,7 +115,7 @@ namespace ImageResizer.Functions
                 }
             }
 
-            throw new ArgumentException(errorMessage);
+            throw new ArgumentException(ErrorMessage);
         }
      
 

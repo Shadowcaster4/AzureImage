@@ -24,16 +24,16 @@ namespace ImageResizer.Services.Interfaces
     public class ImageServiceLocally : BaseService, IImageService
     {
 
-        private readonly DirectoryInfo serviceClient;
+        private readonly DirectoryInfo _serviceClient;
 
         public ImageServiceLocally() : base()
         {
-            serviceClient = new DirectoryInfo(_applicationConnectionString);
+            _serviceClient = new DirectoryInfo(_applicationConnectionString);
         }
 
         public ImageServiceLocally(string applicationConnectionString) : base(applicationConnectionString)
         {
-            serviceClient = new DirectoryInfo(applicationConnectionString);
+            _serviceClient = new DirectoryInfo(applicationConnectionString);
         }
 
         #region Containers Methods
@@ -45,7 +45,7 @@ namespace ImageResizer.Services.Interfaces
       
         private string GetContainerPath(IContainerService container)
         {
-            return serviceClient.FullName + "\\" + container.GetContainerName();
+            return _serviceClient.FullName + "\\" + container.GetContainerName();
         }
 
         private string GetFullFilePath(IContainerService container, string filePath)
@@ -62,12 +62,12 @@ namespace ImageResizer.Services.Interfaces
             if (CheckIfContainerExists(container))
                 return new DirectoryInfo(GetContainerPath(container));
             
-            throw new Exception("container doesnt exists");
+            throw new Exception("container doesn't exists");
         }
 
         public List<string> GetBlobContainers()
         {
-            return serviceClient.GetDirectories()
+            return _serviceClient.GetDirectories()
                 .Select(x => x.Name)
                 .Where(x=>CheckIfContainerNameIsValid(
                     new ContainerClass(x))
@@ -94,7 +94,7 @@ namespace ImageResizer.Services.Interfaces
         {
             if (CheckIfContainerExists(clientContainer))
                 return false;
-            serviceClient.CreateSubdirectory(clientContainer.GetContainerName());
+            _serviceClient.CreateSubdirectory(clientContainer.GetContainerName());
             return true;
         }
         #endregion
@@ -183,17 +183,16 @@ namespace ImageResizer.Services.Interfaces
            
             if (!CheckIfContainerExists(container))
                 CreateUsersContainer(container);
-           // var containerClient = GetServiceContainer(container);
+         
 
             if (CheckIfImageExists(imagePath,container))
                 return new ImageData();
 
             var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
-
             
-
             string fullPath = GetFullFilePath(container,imagePath);
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+
             using (FileStream uploadImage = File.Create(fullPath))
             {
                 image.Position = 0;
@@ -202,7 +201,7 @@ namespace ImageResizer.Services.Interfaces
                 tmpStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
             }
-           // dbService.SaveImagesData(new List<ImageData>(){imageData});
+     
             image.Dispose();
             return imageData;
         }
@@ -247,8 +246,7 @@ namespace ImageResizer.Services.Interfaces
 
         private string FindLetterPath(string path)
         {
-            var xyz = String.Join(@"\", path.Split('\\').Skip(3));
-            return xyz;
+            return String.Join(@"\", path.Split('\\').Skip(3));
         }
 
 
@@ -277,14 +275,10 @@ namespace ImageResizer.Services.Interfaces
         #region Resize Methods
         public MemoryStream DownloadImageFromStorageToStream(string imagePath,IContainerService container)
         {
-            var containerClient = GetServiceContainer(container);
-            
-           // SetImageObject(imagePath);
             MemoryStream outputStream = new MemoryStream();
             using(var fs = File.Open(GetFullFilePath(container,imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 fs.CopyTo(outputStream);
-                fs.Dispose();
             }                   
             return outputStream;
         }
@@ -380,7 +374,7 @@ namespace ImageResizer.Services.Interfaces
             return Regex.IsMatch(container.GetContainerName(), @"^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$");           
         }
 
-        public bool ChceckIfFileIsSupported(string fileName)
+        public bool CheckIfFileIsSupported(string fileName)
         {
             return (fileName.EndsWith(".png") || fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".gif"));           
         }
@@ -404,7 +398,7 @@ namespace ImageResizer.Services.Interfaces
         }
 
 
-        public string HashMyString(string stringToHash)
+        private string HashMyString(string stringToHash)
         {
             var data = Encoding.ASCII.GetBytes(stringToHash);
             var hashData = new SHA1Managed().ComputeHash(data);
@@ -428,10 +422,6 @@ namespace ImageResizer.Services.Interfaces
 
 
         #endregion
-
-        public string Test(string fileName)
-        {
-            return fileName;
-        }
+        
     }
 }

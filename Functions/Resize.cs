@@ -29,9 +29,6 @@ namespace ImageResizer
             string image,
             ILogger log)
         {
-            var resp = new HttpResponseMessage();
-            bool flagIsInOryginalImageRange = false;
-
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -45,7 +42,7 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "invalid parameter values");
                 }
 
-                if(!service.ChceckIfFileIsSupported(image))
+                if(!service.CheckIfFileIsSupported(image))
                 {
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "Not supported image type");
@@ -63,6 +60,7 @@ namespace ImageResizer
                 //checks if watermark image exist if not watermark presence parameter is set to false
                 if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png"), containerService))
                     requestedParameters.SetWatermarkPresence(false);
+
                 //checks if hash from parameter is valid for requested picture
                 else if (service.GetImageSecurityHash(clientHash, image).Substring(0, 4) == requestedParameters.WatermarkString)
                     requestedParameters.SetWatermarkPresence(false);
@@ -74,21 +72,21 @@ namespace ImageResizer
                 //checks if requested resolution is valid - oryginal image resolution is >= requested resolution
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
                 var imageData = databaseService.GetImageData(image, containerService);
-                               
-                    flagIsInOryginalImageRange = 
-                        service.CheckIfImageRequestedImageResolutionIsInRange(
-                            requestedParameters.Width, 
-                            requestedParameters.Height, 
-                            imageData);
+               
+                var flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(
+                    requestedParameters.Width, 
+                    requestedParameters.Height, 
+                    imageData);
 
-                    //if requested image resolution is out of range and requested image doesnt contain watermark then it will return image from oryginal image stream
-                if (!(flagIsInOryginalImageRange))
+                //if requested image resolution is out of range and requested image doesn't contain watermark then it will return image from original image stream
+                if (!flagIsInOryginalImageRange)
                 {
                     if(!requestedParameters.WatermarkPresence)
                     {
                         var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
                         return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, image, imageExtension);
                     }
+                    //if watermark will be used then new image will be created and saved in location created from "0,0" parameters
                     string newParametersValues = "0,0";
                     var oversizeImageParameters = new QueryParameterValues(newParametersValues);
                     requestedParameters = oversizeImageParameters;
@@ -102,11 +100,13 @@ namespace ImageResizer
                     return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, image, imageExtension);
                 }
 
+                //this part creates new resized image
                 if(service.CheckIfImageExists(service.GetImagePathUpload(image),containerService))
-                {                    
+                {  
+                    //download base image from storage
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(image),containerService);
-                    
-                    var mutadedImage = service.MutateImage(
+                    //create new image with requested parameters
+                    var mutatedImage = service.MutateImage(
                         imageFromStorage,
                         containerService,
                         requestedParameters.Width, 
@@ -114,10 +114,10 @@ namespace ImageResizer
                         requestedParameters.Padding,
                         imageExtension,
                         requestedParameters.WatermarkPresence);
+                    //save created image
+                    service.SaveImage(mutatedImage, imagePath,containerService);
 
-                    service.SaveImage(mutadedImage, imagePath,containerService);
-
-                    return Utilities.Utilities.GetImageHttpResponseMessage(mutadedImage, image, imageExtension);
+                    return Utilities.Utilities.GetImageHttpResponseMessage(mutatedImage, image, imageExtension);
 
                 }
                 
