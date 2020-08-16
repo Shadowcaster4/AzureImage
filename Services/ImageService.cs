@@ -252,6 +252,7 @@ namespace ImageResizer.Services
         {
             MemoryStream outputStream = new MemoryStream();
             GetBlobImage(imagePath,container).DownloadTo(outputStream);
+            
             return outputStream;
         }
 

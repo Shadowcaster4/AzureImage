@@ -43,7 +43,7 @@ namespace ImageResizer.Services
             if (CheckIfDbFileExist(DbConnString))
             {
                 DbConnection = SetDbConnection(DbConnString);
-                IImageService service = Utilities.Utilities.GetImageService();
+                IImageService _service = Utilities.Utilities.GetImageService();
             //    RestoreData(service);
             //    CheckAndCorrectDbData(service);
             }
@@ -51,7 +51,7 @@ namespace ImageResizer.Services
             {
                 CreateDatabase(DbConnString);
                 DbConnection = SetDbConnection(DbConnString);
-                IImageService service = Utilities.Utilities.GetImageService(); 
+                IImageService _service = Utilities.Utilities.GetImageService(); 
                 RestoreData(_service);
             }
         }

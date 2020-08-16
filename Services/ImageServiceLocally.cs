@@ -279,6 +279,7 @@ namespace ImageResizer.Services.Interfaces
             using(var fs = File.Open(GetFullFilePath(container,imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 fs.CopyTo(outputStream);
+                fs.Dispose();
             }                   
             return outputStream;
         }
