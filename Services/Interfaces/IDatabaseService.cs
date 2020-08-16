@@ -17,5 +17,8 @@ namespace ImageResizer.Database
         ImageData GetImageData(string imageName, IContainerService container);
         void SaveImagesData(List<ImageData> imageDataList);
         void DropTable();
+        bool CreateTableIfNotExists();
+        void CheckAndCorrectDbData(IImageService imageService);
+        void CompareAndCorrectDbDataForContainer(IImageService imageService, IContainerService container);
     }
 }

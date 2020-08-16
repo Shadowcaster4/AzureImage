@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageResizer", "ImageResizer.csproj", "{3BF03ED2-C6E5-4506-AC17-C7B7316031B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageResizerTests1", "..\ImageResizerTests1\ImageResizerTests1.csproj", "{250D9330-2A4B-44B7-BBFB-B2B28693E55B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageResizerTests1", "..\ImageResizerTests1\ImageResizerTests1.csproj", "{250D9330-2A4B-44B7-BBFB-B2B28693E55B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

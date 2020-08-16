@@ -189,7 +189,7 @@ namespace ImageResizer.Services
             Parallel.ForEach(imageService.GetBlobContainers(),
                 container =>
                 {
-                    CompareAndCorrectDbDataWithStorageImages(imageService, new ContainerClass(container));
+                    CompareAndCorrectDbDataForContainer(imageService, new ContainerClass(container));
                 });
         }
 
@@ -224,7 +224,7 @@ namespace ImageResizer.Services
         }
 
 
-        public void CompareAndCorrectDbDataWithStorageImages(IImageService imageService, IContainerService container)
+        public void CompareAndCorrectDbDataForContainer(IImageService imageService, IContainerService container)
         {
             var dbImagesList = GetContainerImagesDataFromDb(container);
             var storageImages = imageService.GetBaseImagesDictionary(container);
