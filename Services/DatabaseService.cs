@@ -121,7 +121,7 @@ namespace ImageResizer.Services
             }
         }
 
-        //todo:oddzielna metoda do sprawdzania rozmiaru obrazka + testy!!!! test szybkosc/wydajnosci w petli 1 plik 100 razy
+        
         public void RestoreDataForContainer(IImageService imageService, IContainerService container)
         {
             var dbImagesList = GetContainerImagesDataFromDb(container);
