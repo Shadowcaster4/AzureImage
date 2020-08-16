@@ -30,7 +30,7 @@ namespace ImageResizer
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Upload")] HttpRequest req,
             ILogger log)
         {
-            var resp = new HttpResponseMessage();
+          
             try
             {
                 if(!req.Form.Files.Any() || req.Form["container"] == string.Empty)

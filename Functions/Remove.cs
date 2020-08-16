@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ImageResizer.Utilities;
+using ServiceStack;
 
 namespace ImageResizer
 {
@@ -29,12 +30,20 @@ namespace ImageResizer
             
             try
             {
-                
+
                 IImageService service = Utilities.Utilities.GetImageService();
-
-                IContainerService containerService = new ContainerClass(req.Form["container"]);
-
+                
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
+
+
+                string objectToDelete = req.Form["objectToDelete"];
+                string containerName = req.Form["container"];
+                string imageName = req.Form["imageName"];
+                string imageParameters = req.Form["imageParameters"];
+                string secKey = req.Form["secKey"];
+
+                IContainerService containerService = new ContainerClass(containerName);
+
 
                 if (!service.CheckIfContainerExists(containerService))
                 {
@@ -43,10 +52,10 @@ namespace ImageResizer
                     
                 }
 
-                switch (req.Form["objectToDelete"])
+                switch (objectToDelete)
                 {
                     case "container":
-                        if (service.GetImageSecurityHash(containerService.GetContainerName(), Utilities.Utilities.ContainerRemoveKey) != req.Form["secKey"])
+                        if (service.GetImageSecurityHash(containerService.GetContainerName(), Utilities.Utilities.ContainerRemoveKey) != secKey)
                             break;
                         if (service.CheckIfContainerExists(containerService))
                         {
@@ -64,12 +73,12 @@ namespace ImageResizer
                         break;
 
                     case "imageDirectory":
-                        if(service.GetImageSecurityHash(req.Form["container"],req.Form["imageName"]) != req.Form["secKey"])
+                        if(service.GetImageSecurityHash(containerName,imageName) != secKey || imageName.IsNullOrEmpty())
                             break;
                        
-                        if(service.DeleteImageDirectory(req.Form["imageName"],containerService))
+                        if(service.DeleteImageDirectory(imageName,containerService))
                         { 
-                            databaseService.DeleteImage(req.Form["imageName"], containerService);
+                            databaseService.DeleteImage(imageName, containerService);
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                                 HttpStatusCode.OK, "Requested directory is gone");
                         }
@@ -80,15 +89,15 @@ namespace ImageResizer
                         }
                         break;
                     case "singleImage":
-                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
+                        if (service.GetImageSecurityHash(containerName, imageName) != secKey || imageName.IsNullOrEmpty())
                             break;
 
-                        var requestedParameters = new QueryParameterValues(req.Form["imageParameters"]);
+                        var requestedParameters = new QueryParameterValues(imageParameters);
 
-                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]).Substring(0, 4) == requestedParameters.WatermarkString)
+                        if (service.GetImageSecurityHash(containerName, imageName).Substring(0, 4) == requestedParameters.WatermarkString)
                             requestedParameters.SetWatermarkPresence(false);
 
-                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, req.Form["imageName"]),containerService))
+                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, imageName),containerService))
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                                 HttpStatusCode.OK, "Requested image is gone");
@@ -100,12 +109,12 @@ namespace ImageResizer
                         }
                         break;
                     case "letterDirectory":
-                        if (service.GetImageSecurityHash(req.Form["container"], req.Form["imageName"]) != req.Form["secKey"])
+                        if (service.GetImageSecurityHash(containerName, imageName) != secKey || imageName.IsNullOrEmpty())
                             break;         
 
-                        if (service.DeleteLetterDirectory(req.Form["imageName"],containerService))
+                        if (service.DeleteLetterDirectory(imageName,containerService))
                         {
-                            databaseService.DeleteLetterDirectory(req.Form["imageName"], containerService);
+                            databaseService.DeleteLetterDirectory(imageName, containerService);
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                                 HttpStatusCode.OK, "Requested letter directory is gone");
                         }
