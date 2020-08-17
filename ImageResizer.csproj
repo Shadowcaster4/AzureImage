@@ -12,6 +12,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="AppSettings.json" />
+    <None Remove="Utilities\AppConfig.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Utilities\AppConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="AppSettings.json">
@@ -40,9 +46,6 @@
     <None Update="local.settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </None>
-    <None Update="Utilities\AppConfig.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

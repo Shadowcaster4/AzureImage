@@ -72,6 +72,8 @@ namespace ImageResizer.Utilities
             };
         }
 
+        
+
         public static HttpResponseMessage GetImageHttpResponseMessage(MemoryStream tmpImg,string imageName,string imageExtension)
         {
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);

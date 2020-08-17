@@ -12,7 +12,7 @@ namespace ImageResizer.Services
         //private IConfigurationRoot _config = new ConfigurationBuilder().AddJsonFile(@".\ImageResizerConfig.json").Build();
         public BaseService()
         {
-         
+         /*
         _applicationConnectionString = Environment.GetEnvironmentVariable("ApplicationEnvironment") switch
             {
                 "Local" => Environment.GetEnvironmentVariable("LocalStorageConnectionString"),// Environment.GetEnvironmentVariable("LocalStorageConnectionString"),
@@ -20,7 +20,7 @@ namespace ImageResizer.Services
                 "LocalAzure" => Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"), // Environment.GetEnvironmentVariable("LocalAzureStorageConnectionString"),
                 _ => "Connection string Error",
             };         
-          
+          */
         }
 
         public BaseService(string applicationConnectionString)

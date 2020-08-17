@@ -20,5 +20,7 @@ namespace ImageResizer.Database
         bool CreateTableIfNotExists();
         void CheckAndCorrectDbData(IImageService imageService);
         void CompareAndCorrectDbDataForContainer(IImageService imageService, IContainerService container);
+        long GetImagesInDbCount(IImageService service, IContainerService container);
+        long GetImagesInDbCount(IImageService service);
     }
 }

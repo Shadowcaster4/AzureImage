@@ -61,6 +61,14 @@ namespace ImageResizer.Services
             return File.Exists(GetDbFilePathFromConnString(databasePath));
         }
 
+        public bool CreateTableIfNotExists()
+        {
+            using (var db = DbConnection.Open())
+            {
+                return db.CreateTableIfNotExists<ImageData>();
+            }
+        }
+
 
         public void DeleteClientContainer(IContainerService container)
         {
@@ -79,6 +87,15 @@ namespace ImageResizer.Services
             }
         }
 
+
+        public void DeleteImages(IEnumerable<ImageData> imagesToDelete)
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.DeleteAll(imagesToDelete);
+            }
+        }
+
         public void DeleteLetterDirectory(string imageName, IContainerService container)
         {
             using (var db = DbConnection.Open())
@@ -87,6 +104,17 @@ namespace ImageResizer.Services
                     x.ImageName.StartsWith(imageName[0]) && x.ClientContainer == container.GetContainerName());
             }
         }
+
+
+        public void DropTable()
+        {
+            using (var db = DbConnection.Open())
+            {
+                db.DropTable<ImageData>();
+            }
+        }
+
+      
 
         public ImageData GetImageData(string imageName, IContainerService container)
         {
@@ -97,6 +125,84 @@ namespace ImageResizer.Services
             }
         }
 
+       
+
+        private OrmLiteConnectionFactory SetDbConnection(string dbConnString)
+        {
+            return new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
+        }
+
+        private void CreateDatabase(string dbConnString)
+        {
+            using (var database = new SQLiteConnection(dbConnString))
+            {
+                database.Open();
+            }
+        }
+
+  
+
+
+        private string GetDbFilePathFromConnString(string dbConnString)
+        {
+            return dbConnString.Substring(dbConnString.IndexOf('=') + 1,
+                dbConnString.IndexOf(';') - dbConnString.IndexOf('=') - 1);
+        }
+
+     
+
+
+        public List<ImageData> GetContainerImagesDataFromDb(IContainerService container)
+        {
+            using (var db = DbConnection.Open())
+            {
+                return DbConnection.Open().Select<ImageData>(x => x.ClientContainer == container.GetContainerName());
+            }
+        }
+
+
+        public ImageData GetImageProperties(IImageService service, string imageName, IContainerService container)
+        {
+            var openImage = service.DownloadImageFromStorageToStream(
+                service.GetImagePathUpload(imageName),
+                container);
+            openImage.Position = 0;
+
+            var (width, height) = GetFileResolution.GetDimensions(new BinaryReader(openImage));
+
+            var imageData = new ImageData
+            {
+                ImageName = Path.GetFileName(imageName),
+                ClientContainer = container.GetContainerName(),
+                Width = width,
+                Height = height,
+                Size = openImage.Length.ToString()
+            };
+            openImage.Dispose();
+            return imageData;
+        }
+
+        public long GetImagesInDbCount(IImageService service, IContainerService container)
+        {
+            using (var db = DbConnection.Open())
+            {
+                return DbConnection.Open().Count<ImageData>(x => x.ClientContainer == container.GetContainerName());
+            }
+        }
+
+        public long GetImagesInDbCount(IImageService service)
+        {
+            using (var db = DbConnection.Open())
+            {
+                return DbConnection.Open().Count<ImageData>();
+            }
+        }
+
+
+
+
+
+
         public void RestoreData(IImageService imageService)
         {
             CreateTableIfNotExists();
@@ -104,23 +210,7 @@ namespace ImageResizer.Services
             Parallel.ForEach(imageService.GetBlobContainers(),
                 container => { RestoreDataForContainer(imageService, new ContainerClass(container)); });
 
-            /*
-            foreach (string container in service.GetBlobContainers())
-            {
-                RestoreDataForContainer(service,new ContainerClass(container)); 
-            }
-            
-            */
         }
-
-        public void SaveImagesData(List<ImageData> imageDataList)
-        {
-            using (var db = DbConnection.Open())
-            {
-                db.SaveAll(imageDataList);
-            }
-        }
-
         
         public void RestoreDataForContainer(IImageService imageService, IContainerService container)
         {
@@ -149,40 +239,6 @@ namespace ImageResizer.Services
             }
         }
 
-        private OrmLiteConnectionFactory SetDbConnection(string dbConnString)
-        {
-            return new OrmLiteConnectionFactory(dbConnString, SqliteDialect.Provider);
-        }
-
-        private void CreateDatabase(string dbConnString)
-        {
-            using (var database = new SQLiteConnection(dbConnString))
-            {
-                database.Open();
-            }
-        }
-
-        public void DropTable()
-        {
-            using (var db = DbConnection.Open())
-            {
-                db.DropTable<ImageData>();
-            }
-        }
-
-        private string GetDbFilePathFromConnString(string dbConnString)
-        {
-            return dbConnString.Substring(dbConnString.IndexOf('=') + 1,
-                dbConnString.IndexOf(';') - dbConnString.IndexOf('=') - 1);
-        }
-
-        public void DeleteImages(IEnumerable<ImageData> imagesToDelete)
-        {
-            using (var db = DbConnection.Open())
-            {
-                db.DeleteAll(imagesToDelete);
-            }
-        }
 
         public void CheckAndCorrectDbData(IImageService imageService)
         {
@@ -194,35 +250,6 @@ namespace ImageResizer.Services
         }
 
 
-        public bool CreateTableIfNotExists()
-        {
-            using (var db = DbConnection.Open())
-            {
-                return db.CreateTableIfNotExists<ImageData>();
-            }
-        }
-
-        public ImageData GetImageProperties(IImageService service, string imageName, IContainerService container)
-        {
-            var openImage = service.DownloadImageFromStorageToStream(
-                service.GetImagePathUpload(imageName),
-                container);
-            openImage.Position = 0;
-
-            var (width, height) = GetFileResolution.GetDimensions(new BinaryReader(openImage));
-
-            var imageData = new ImageData
-            {
-                ImageName = Path.GetFileName(imageName),
-                ClientContainer = container.GetContainerName(),
-                Width = width,
-                Height = height,
-                Size = openImage.Length.ToString()
-            };
-            openImage.Dispose();
-            return imageData;
-        }
-
 
         public void CompareAndCorrectDbDataForContainer(IImageService imageService, IContainerService container)
         {
@@ -233,12 +260,14 @@ namespace ImageResizer.Services
             DeleteImages(absentFromStorage);
         }
 
-        public List<ImageData> GetContainerImagesDataFromDb(IContainerService container)
+        public void SaveImagesData(List<ImageData> imageDataList)
         {
             using (var db = DbConnection.Open())
             {
-                return DbConnection.Open().Select<ImageData>(x => x.ClientContainer == container.GetContainerName());
+                db.SaveAll(imageDataList);
             }
         }
+
+    
     }
 }
