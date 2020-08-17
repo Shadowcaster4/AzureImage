@@ -39,7 +39,7 @@ namespace ImageResizer.Functions
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.NotFound, "Provided container is invalid");
 
-                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService("", false);
+                IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
 
                 databaseService.CreateTableIfNotExists();
                 databaseService.RestoreDataForContainer(service, containerService);
@@ -47,7 +47,7 @@ namespace ImageResizer.Functions
 
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, $"Table data for container {container} was succesfully restored");
+                    HttpStatusCode.OK, $"Table data for container  was successfully restored");
             }
             catch (Exception e)
             {

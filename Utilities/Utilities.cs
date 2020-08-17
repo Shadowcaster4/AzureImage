@@ -9,6 +9,7 @@ using ImageResizer.Database;
 using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using ServiceStack;
 
 namespace ImageResizer.Utilities
@@ -60,6 +61,10 @@ namespace ImageResizer.Utilities
 
         public static HttpResponseMessage GetHttpResponseMessage_ReturnsStatusCodeAndMessage(HttpStatusCode statusCode,string responseMessage)
         {
+            if (!(responseMessage.StartsWith("{") && responseMessage.EndsWith("}") ||
+                  responseMessage.StartsWith("[") && responseMessage.EndsWith("]")))
+                responseMessage = JsonConvert.SerializeObject(value: responseMessage);
+
             return new HttpResponseMessage
             {
                 StatusCode = statusCode,

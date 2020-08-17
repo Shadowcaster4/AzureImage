@@ -114,7 +114,8 @@ namespace ImageResizer.Services.Interfaces
         {
             var containerClient = GetServiceContainer(container);
 
-            var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories);
+            var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories)
+                .Where(x=>CheckIfFileIsSupported(x.Name));
 
             return myContainerFiles.ToDictionary(file => file.FullName, file => file.Length);
         }
@@ -257,7 +258,8 @@ namespace ImageResizer.Services.Interfaces
             if (depth == 0)
             {
                 string[] files = Directory.GetFiles(startLocation, "*.*");
-                foreach (string file in files)
+          
+                foreach (string file in files.Where(CheckIfFileIsSupported))
                 {
                     FileInfo tmpFile = new FileInfo(Path.GetFullPath(file));
                     myFiles.Add(file, new LocalFileInfo(tmpFile.Name, tmpFile.Length, tmpFile.CreationTime));
@@ -271,6 +273,23 @@ namespace ImageResizer.Services.Interfaces
             }
             return myFiles;
         }
+
+
+        public bool RemoveOldCache(IContainerService container, int days)
+        {
+            var cachedImagesDictionary = GetCachedImagesDictionary(container);
+            bool flag = true;
+
+            foreach (var item in cachedImagesDictionary)
+            {
+                if (item.Value < DateTime.UtcNow.AddDays(days*-1))
+                    if (!DeleteCachedImage(item.Key, container))
+                        flag = false;
+            }
+
+            return flag;
+        }
+
         #endregion
         #region Resize Methods
         public MemoryStream DownloadImageFromStorageToStream(string imagePath,IContainerService container)
@@ -283,6 +302,31 @@ namespace ImageResizer.Services.Interfaces
             }                   
             return outputStream;
         }
+
+        public MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container)
+        {
+            MemoryStream outputStream = new MemoryStream();
+            using (var fs = File.Open(GetFullFilePath(container, imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+               
+                if (Path.GetFileName(imagePath).EndsWith(".gif") || Path.GetFileName(imagePath).EndsWith(".png"))
+                {
+                    byte[] bytes = new byte[2048];
+                    fs.Read(bytes, 0, 2048);
+                    outputStream = new MemoryStream(bytes);
+                }
+                else
+                {
+
+                    fs.CopyTo(outputStream);
+
+                }
+              
+                fs.Dispose();
+            }
+            return outputStream;
+        }
+
 
         public IImageEncoder GetImageEncoder(string fileFormat)
         {

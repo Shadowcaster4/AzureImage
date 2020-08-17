@@ -16,7 +16,7 @@ namespace ImageResizer.Services
     {
         private OrmLiteConnectionFactory DbConnection { get; set; }
         private string DbConnString { get;  }
-        private IImageService _service;
+        
 
         public DatabaseService(string dbConnString,bool initialize)
         {
@@ -43,7 +43,7 @@ namespace ImageResizer.Services
             if (CheckIfDbFileExist(DbConnString))
             {
                 DbConnection = SetDbConnection(DbConnString);
-                IImageService _service = Utilities.Utilities.GetImageService();
+                //service = Utilities.Utilities.GetImageService();
             //    RestoreData(service);
             //    CheckAndCorrectDbData(service);
             }
@@ -51,8 +51,8 @@ namespace ImageResizer.Services
             {
                 CreateDatabase(DbConnString);
                 DbConnection = SetDbConnection(DbConnString);
-                IImageService _service = Utilities.Utilities.GetImageService(); 
-                RestoreData(_service);
+                IImageService service = Utilities.Utilities.GetImageService(); 
+                RestoreData(service);
             }
         }
 
@@ -163,7 +163,7 @@ namespace ImageResizer.Services
 
         public ImageData GetImageProperties(IImageService service, string imageName, IContainerService container)
         {
-            var openImage = service.DownloadImageFromStorageToStream(
+            var openImage = service.DownloadHeadOfImageFromStorageToStream(
                 service.GetImagePathUpload(imageName),
                 container);
             openImage.Position = 0;

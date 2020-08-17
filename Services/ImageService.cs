@@ -195,6 +195,11 @@ namespace ImageResizer.Services
             return imageData;
         }
 
+        public MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData)
         {
             return width <= imageData.Width || height <= imageData.Height;
@@ -244,6 +249,22 @@ namespace ImageResizer.Services
             
             return cachedImagesDictionary;
         }
+
+        public bool RemoveOldCache(IContainerService container, int days)
+        {
+            var cachedImagesDictionary = GetCachedImagesDictionary(container);
+            bool flag = true;
+
+            foreach (var item in cachedImagesDictionary)
+            {
+                if (item.Value < DateTime.UtcNow.AddDays(days * -1))
+                    if (!DeleteCachedImage(item.Key, container))
+                        flag = false;
+            }
+
+            return flag;
+        }
+
         #endregion
 
         #region Resize Methods
@@ -391,7 +412,8 @@ namespace ImageResizer.Services
 
         #endregion
 
-       
-       
+      
+
+
     }
 }

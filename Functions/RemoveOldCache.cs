@@ -32,18 +32,11 @@ namespace ImageResizer
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
+                
+                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
 
-                var cachedImagesDictionary = service.GetCachedImagesDictionary(containerService);
-                bool flag = true;
-                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"))*-1;
-              // int DaysAfterImageCacheWillBeDeleted = 1;
+                bool flag = service.RemoveOldCache(containerService, DaysAfterImageCacheWillBeDeleted);
 
-                foreach (var item in cachedImagesDictionary)
-                {
-                    if (item.Value < DateTime.UtcNow.AddDays(DaysAfterImageCacheWillBeDeleted))
-                        if (!service.DeleteCachedImage(item.Key,containerService))
-                            flag = false;
-                }
 
                 if (!flag)
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(

@@ -39,7 +39,8 @@ namespace ImageResizer.Services.Interfaces
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
     
         ImageData UploadImage(Stream image, IContainerService container, string imagePath);
+        MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container);
+        bool RemoveOldCache(IContainerService container, int days);
 
-     
     }
 }
