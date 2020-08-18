@@ -33,7 +33,8 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
                 
-                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
+               // int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
+                int DaysAfterImageCacheWillBeDeleted = Utilities.Utilities.DaysAfterOldCacheWillBeRemoved;
 
                 
 
