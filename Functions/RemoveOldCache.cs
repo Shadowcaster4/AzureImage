@@ -35,6 +35,8 @@ namespace ImageResizer
                 
                 int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
 
+                
+
                 bool flag = service.RemoveOldCache(containerService, DaysAfterImageCacheWillBeDeleted);
 
 
