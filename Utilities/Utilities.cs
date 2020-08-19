@@ -16,23 +16,19 @@ namespace ImageResizer.Utilities
 {
     public static  class Utilities
     {
-        private const string ApplicationEnvironment = "Local"; //Azure / Local / LocalAzure 
-        private const string LocalStorageConnectionString = "E:\\ImageResizeTestStorageNewFolders";
-        private const string LocalAzureStorageConnectionString = "UseDevelopmentStorage=true";
-        private const string AzureStorageConnectionString = "";
-
-        public const string ApplicationContainerRemoveKey = "SomeApplicationKeyForHashingContainers";
-        public const int DaysAfterOldCacheWillBeRemoved = 15;
-
+        private static readonly string xfff = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "AppConfig.json");
         private static readonly IConfigurationRoot _config = new ConfigurationBuilder()
-            .AddJsonFile(@"C:\Users\Tanatos\source\repos\ImageResizer\Utilities\AppConfig.json").Build();
+            .AddJsonFile(Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"Utilities\AppConfig.json")).Build();
+            //.AddJsonFile(@"C:\Users\Tanatos\source\repos\ImageResizer\Utilities\AppConfig.json").Build();
 
         public static readonly string ContainerRemoveKey = _config.GetSection("ContainerRemoveKey").Value;
 
+        
+
         public static IImageService GetImageService(string environment="",string connectionString ="")
         {
-            
 
+            
             if (environment.IsNullOrEmpty())
                 environment = _config.GetSection("ApplicationEnvironment").Value;
 

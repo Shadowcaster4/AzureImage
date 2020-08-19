@@ -114,7 +114,7 @@ namespace ImageResizer.Services
             }
         }
 
-        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
+        public Dictionary<string, long> GetImagesDictionaryPathAndSize(IContainerService container)
         {
             var blobs = GetImagesFromContainer(container);
 

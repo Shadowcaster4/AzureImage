@@ -34,7 +34,7 @@ namespace ImageResizer
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
 
-                double containerSizeInMiB = Math.Round(service.GetImagesDictionarySize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
+                double containerSizeInMiB = Math.Round(service.GetImagesDictionaryPathAndSize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
               
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.OK, JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName(), ContainerSizeMiB = containerSizeInMiB }));

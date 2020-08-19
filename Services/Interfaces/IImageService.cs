@@ -32,7 +32,7 @@ namespace ImageResizer.Services.Interfaces
         string GetImageSecurityHash(string container, string imageName);
         string GetUploadImageSecurityKey(string container, string imageName, string imageSize);
         IImageEncoder GetImageEncoder(string fileFormat);
-        Dictionary<string, long> GetImagesDictionarySize(IContainerService container);
+        Dictionary<string, long> GetImagesDictionaryPathAndSize(IContainerService container);
         Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container);
         Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container);
         MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int height, bool padding, string fileFormat, bool watermark);

@@ -39,18 +39,13 @@ namespace ImageResizer.Services.Interfaces
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
-            return Directory.Exists(GetContainerPath(container));
+            return Directory.Exists(Path.Combine(_serviceClient.FullName,container.GetContainerName()));
         }
-
-      
-        private string GetContainerPath(IContainerService container)
-        {
-            return _serviceClient.FullName + "\\" + container.GetContainerName();
-        }
-
+        
         private string GetFullFilePath(IContainerService container, string filePath)
         {
-            return GetContainerPath(container) + "\\" + filePath;
+            return Path.Combine(_serviceClient.FullName,container.GetContainerName(), filePath);
+          //  return GetContainerPath(container) + "\\" + filePath;
         }
 
      
@@ -60,7 +55,7 @@ namespace ImageResizer.Services.Interfaces
                 throw new Exception("Invalid container name");
 
             if (CheckIfContainerExists(container))
-                return new DirectoryInfo(GetContainerPath(container));
+                return new DirectoryInfo(Path.Combine(_serviceClient.FullName,container.GetContainerName()));
             
             throw new Exception("container doesn't exists");
         }
@@ -110,14 +105,14 @@ namespace ImageResizer.Services.Interfaces
         }
 
        
-        public Dictionary<string, long> GetImagesDictionarySize(IContainerService container)
+        public Dictionary<string, long> GetImagesDictionaryPathAndSize(IContainerService container)
         {
             var containerClient = GetServiceContainer(container);
 
-            var myContainerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories)
+            var containerFiles = containerClient.GetFiles("*", SearchOption.AllDirectories)
                 .Where(x=>CheckIfFileIsSupported(x.Name));
 
-            return myContainerFiles.ToDictionary(file => file.FullName, file => file.Length);
+            return containerFiles.ToDictionary(file => file.FullName, file => file.Length);
         }
 
         public bool DeleteCachedImage(string imagePath,IContainerService container)
@@ -138,7 +133,8 @@ namespace ImageResizer.Services.Interfaces
 
             if (fileToDelete.Exists)
             {
-                string directoryPath = fileToDelete.DirectoryName+"\\"+fileToDelete.Name.Replace(".","");
+                string directoryPath =Path.Combine(fileToDelete.DirectoryName,fileToDelete.Name.Replace(".",""));
+               // string directoryPath = fileToDelete.DirectoryName+"\\"+fileToDelete.Name.Replace(".","");
                 fileToDelete.Delete();
                 Directory.Delete(directoryPath, true);
                 return true;
@@ -152,7 +148,8 @@ namespace ImageResizer.Services.Interfaces
            // GetLocalFiles(myBaseImagesDictionary, GetContainerPath(container), 2);
            try
            {
-               Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
+               //Directory.Delete(GetContainerPath(container) + "\\" + fileName[0], true);
+               Directory.Delete(Path.Combine(_serviceClient.FullName,container.GetContainerName(),fileName[0].ToString()), true);
                return true;
            }
            catch (Exception e)
@@ -215,14 +212,20 @@ namespace ImageResizer.Services.Interfaces
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)
         {
             if (parameters.WatermarkPresence)
-                return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "\\" + fileName;
+                return Path.Combine(fileName[0].ToString(),
+                fileName.Replace(".", ""),
+                parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark",
+                fileName);
 
-            return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "\\" + fileName;
+            return Path.Combine(fileName[0].ToString(),
+                fileName.Replace(".", ""),
+                parameters.Width + "-" + parameters.Height + "-" + parameters.Padding ,
+                fileName);
         }
 
         public string GetImagePathUpload(string fileName)
         {
-            return fileName[0] + "\\"  + fileName;
+            return Path.Combine(fileName[0].ToString() , fileName);
            // return fileName[0] + "\\" + fileName.Replace(".", "") + "\\" + fileName;
         }
 
@@ -242,7 +245,7 @@ namespace ImageResizer.Services.Interfaces
             var containerClient = GetServiceContainer(container);
             GetLocalFiles(cachedImages, containerClient.FullName, 3);
 
-            return cachedImages.ToDictionary(x =>FindLetterPath(x.Key), x => x.Value.Date);
+            return cachedImages.ToDictionary(x =>x.Key, x => x.Value.Date);
         }
 
         private string FindLetterPath(string path)
@@ -277,14 +280,21 @@ namespace ImageResizer.Services.Interfaces
 
         public bool RemoveOldCache(IContainerService container, int days)
         {
-            var cachedImagesDictionary = GetCachedImagesDictionary(container);
+            //var contariner = container
+            //pelna sciezka wa nie file name tylko
+            Dictionary<string, DateTime> cachedImagesDictionary = GetCachedImagesDictionary(container);
             bool flag = true;
+            var dzienusuwania = DateTime.UtcNow.AddDays(days * -1);
 
             foreach (var item in cachedImagesDictionary)
             {
-                if (item.Value < DateTime.UtcNow.AddDays(days*-1))
-                    if (!DeleteCachedImage(item.Key, container))
-                        flag = false;
+                if (item.Value < dzienusuwania)
+                {
+                    FileInfo tmpFileInfo = new FileInfo(item.Key);
+                    tmpFileInfo.Directory.Delete(true);
+                    if (!tmpFileInfo.Directory.Parent.GetFiles().Any())
+                    tmpFileInfo.Directory.Parent.Delete();
+                }
             }
 
             return flag;
@@ -317,9 +327,7 @@ namespace ImageResizer.Services.Interfaces
                 }
                 else
                 {
-
                     fs.CopyTo(outputStream);
-
                 }
               
                 fs.Dispose();
@@ -396,18 +404,22 @@ namespace ImageResizer.Services.Interfaces
         }
         public bool SaveImage(MemoryStream imageToSave, string imagePath,IContainerService container)
         {
+
+            //todo przesylanie jest optymalne
+            //todo combine wszedzie
             var containerClient = GetServiceContainer(container);
             if (!containerClient.Exists)
                 return false;
             imageToSave.Position = 0;
-            string fullPath = containerClient.FullName + "\\" + imagePath;
+            string fullPath = System.IO.Path.Combine( containerClient.FullName, imagePath);
 
             Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
           
-            using FileStream saveResizedImage = File.Create(containerClient.FullName+"\\" + imagePath);
+            using FileStream saveResizedImage = File.Create(fullPath);
             {
-                imageToSave.WriteTo(saveResizedImage);          
-                saveResizedImage.Dispose();
+                imageToSave.WriteTo(saveResizedImage);       
+                //todo
+                //saveResizedImage.Dispose();
             }
             return true;
         }
