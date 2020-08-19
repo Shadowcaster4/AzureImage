@@ -97,7 +97,7 @@ namespace ImageResizer
                         if (service.GetImageSecurityHash(containerName, imageName).Substring(0, 4) == requestedParameters.WatermarkString)
                             requestedParameters.SetWatermarkPresence(false);
 
-                        if (service.DeleteCachedImage(service.GetImagePathResize(requestedParameters, imageName),containerService))
+                        if (service.DeleteSingleCacheImage(service.GetImagePathResize(requestedParameters, imageName),containerService))
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                                 HttpStatusCode.OK, "Requested image is gone");

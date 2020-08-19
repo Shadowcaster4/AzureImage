@@ -78,7 +78,7 @@ namespace ImageResizer.Services
             return false;
         }
 
-        public bool CreateUsersContainer(IContainerService clientContainer)
+        public bool CreateClientContainer(IContainerService clientContainer)
         {
             if (CheckIfContainerExists(clientContainer))
                 return false;
@@ -122,23 +122,23 @@ namespace ImageResizer.Services
             return imagesDictionary;
         }        
 
-        public bool DeleteCachedImage(string imagePath, IContainerService container)
+        public bool DeleteSingleCacheImage(string cacheImagePath, IContainerService container)
         {
-            if (CheckIfImageExists(imagePath,container))
+            if (CheckIfImageExists(cacheImagePath,container))
             {
-                GetBlobImage(imagePath, container).Delete();
+                GetBlobImage(cacheImagePath, container).Delete();
                 return true;
             }
             return false;
         }
 
-        public bool DeleteImageDirectory(string directoryName, IContainerService container)
+        public bool DeleteImageDirectory(string baseImageName, IContainerService container)
         {
             var containerObjects = GetImagesFromContainer(container);
             bool flag = false;
             foreach (BlobItem blobItem in containerObjects)
             {
-                if (blobItem.Name.Contains("/" + directoryName.Replace(".","") + "/"))
+                if (blobItem.Name.Contains("/" + baseImageName.Replace(".","") + "/"))
                 {
                     GetServiceContainer(container).DeleteBlobIfExists(blobItem.Name);
                     flag = true;
@@ -177,21 +177,21 @@ namespace ImageResizer.Services
             };
         }
 
-        public ImageData UploadImage(Stream image, IContainerService container,  string imagePath)
+        public ImageData UploadImage(Stream imageStream, IContainerService container,  string imagePath)
         {
             if (!CheckIfContainerExists(container))
-              CreateUsersContainer(container);
+              CreateClientContainer(container);
               
             if (CheckIfImageExists(imagePath,container))
                 return new ImageData();
 
-            var imageData = GetImageProperties(image, Path.GetFileName(imagePath), container.GetContainerName());
+            var imageData = GetImageProperties(imageStream, Path.GetFileName(imagePath), container.GetContainerName());
             
-            image.Position = 0;
+            imageStream.Position = 0;
 
-            GetServiceContainer(container).UploadBlob(imagePath, image);
+            GetServiceContainer(container).UploadBlob(imagePath, imageStream);
             
-            image.Dispose();
+            imageStream.Dispose();
             return imageData;
         }
 
@@ -258,7 +258,7 @@ namespace ImageResizer.Services
             foreach (var item in cachedImagesDictionary)
             {
                 if (item.Value < DateTime.UtcNow.AddDays(days * -1))
-                    if (!DeleteCachedImage(item.Key, container))
+                    if (!DeleteSingleCacheImage(item.Key, container))
                         flag = false;
             }
 

@@ -19,10 +19,10 @@ namespace ImageResizer.Services.Interfaces
         bool CheckIfImageExists(string imagePath, IContainerService container);
         bool CheckIfParametersAreInRange(int width, int height);
         bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData);
-        bool CreateUsersContainer(IContainerService clientContainer);
-        bool DeleteCachedImage(string imagePath, IContainerService container);
+        bool CreateClientContainer(IContainerService clientContainer);
+        bool DeleteSingleCacheImage(string cacheImagePath, IContainerService container);
         bool DeleteClientContainer(IContainerService clientContainer);
-        bool DeleteImageDirectory(string directoryName, IContainerService container);
+        bool DeleteImageDirectory(string baseImageName, IContainerService container);
         bool DeleteLetterDirectory(string fileName, IContainerService container);
         MemoryStream DownloadImageFromStorageToStream(string imagePath, IContainerService container);
         List<string> GetBlobContainers();
@@ -38,7 +38,7 @@ namespace ImageResizer.Services.Interfaces
         MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int height, bool padding, string fileFormat, bool watermark);
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
     
-        ImageData UploadImage(Stream image, IContainerService container, string imagePath);
+        ImageData UploadImage(Stream imageStream, IContainerService container, string imagePath);
         MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container);
         bool RemoveOldCache(IContainerService container, int days);
 
