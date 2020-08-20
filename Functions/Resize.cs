@@ -49,7 +49,7 @@ namespace ImageResizer
                 }
 
                 if (!service.CheckIfContainerExists(containerService))
-                    throw new Exception("Problem with container doesn't exists");
+                    throw new Exception("Container doesn't exists");
 
                 if (!service.CheckIfImageExists(service.GetImagePathUpload(imagename),containerService))
                 {
@@ -130,7 +130,7 @@ namespace ImageResizer
                 log.LogInformation(e.Message);
                
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.BadRequest, "Something went wrong");
+                    HttpStatusCode.BadRequest, "Something gone wrong");
 
             }
             

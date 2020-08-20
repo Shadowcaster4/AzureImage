@@ -185,11 +185,7 @@ namespace ImageResizer.Services.Interfaces
             
             using (FileStream uploadImage = File.Create(fullPath))
             {
-                //todo sprawdz upload czy dziala
                 imageStream.Position = 0;
-               // MemoryStream tmpStream = new MemoryStream();
-               // imageStream.CopyTo(tmpStream);
-               // tmpStream.WriteTo(uploadImage);
                 imageStream.WriteTo(uploadImage);
                 uploadImage.Dispose();
             }
@@ -277,16 +273,16 @@ namespace ImageResizer.Services.Interfaces
             //pelna sciezka wa nie file name tylko
             Dictionary<string, DateTime> cacheImagesDictionary = GetCachedImagesDictionary(container);
             bool flag = true;
-            var dzienusuwania = DateTime.UtcNow.AddDays(days * -1);
+            var removeDay = DateTime.UtcNow.AddDays(days * -1);
 
             foreach (var item in cacheImagesDictionary)
             {
-                if (item.Value < dzienusuwania)
+                if (item.Value < removeDay)
                 {
                     FileInfo tmpFileInfo = new FileInfo(item.Key);
                     tmpFileInfo.Directory.Delete(true);
                     if (!tmpFileInfo.Directory.Parent.GetFiles().Any())
-                    tmpFileInfo.Directory.Parent.Delete();
+                        tmpFileInfo.Directory.Parent.Delete();
                 }
             }
 
@@ -398,8 +394,6 @@ namespace ImageResizer.Services.Interfaces
         public bool SaveImage(MemoryStream imageToSave, string imagePath,IContainerService container)
         {
 
-            //todo przesylanie jest optymalne
-            //todo combine wszedzie
             var containerClient = GetServiceContainer(container);
            
             imageToSave.Position = 0;

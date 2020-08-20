@@ -1,7 +1,4 @@
-using Dapper;
 using ImageResizer.Database;
-using ImageResizer.Functions;
-using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
@@ -10,12 +7,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using ImageResizer.Entities;
 using ServiceStack;
@@ -102,7 +96,7 @@ namespace ImageResizer
             {
                 log.LogInformation(e.Message);
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.InternalServerError, "Something went wrong");
+                    HttpStatusCode.InternalServerError, "Something gone wrong");
             }
             
 

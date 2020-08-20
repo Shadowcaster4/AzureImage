@@ -32,9 +32,7 @@ namespace ImageResizer
             {
 
                 IImageService service = Utilities.Utilities.GetImageService();
-                
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
-
 
                 string objectToDelete = req.Form["objectToDelete"];
                 string containerName = req.Form["container"];
@@ -63,12 +61,12 @@ namespace ImageResizer
                             databaseService.DeleteClientContainer(containerService);
 
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.OK, "User container is gone");
+                                HttpStatusCode.OK, "Client container is gone");
                         }
                         else
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.NotFound, "User container doesnt exists");
+                                HttpStatusCode.NotFound, "Client container doesn't exist");
                         }                           
                         break;
 
@@ -85,7 +83,7 @@ namespace ImageResizer
                         else
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.NotFound, "Requested directory doesnt exists");
+                                HttpStatusCode.NotFound, "Requested directory doesn't exist");
                         }
                         break;
                     case "singleImage":
@@ -105,7 +103,7 @@ namespace ImageResizer
                         else
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.NotFound, "Requested file doesnt exists");
+                                HttpStatusCode.NotFound, "Requested file doesn't exists");
                         }
                         break;
                     case "letterDirectory":
@@ -121,7 +119,7 @@ namespace ImageResizer
                         else
                         {
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.NotFound, "Requested letter directory doesn't exists");
+                                HttpStatusCode.NotFound, "Requested letter directory doesn't exist");
                         }
                         break;
                     default:

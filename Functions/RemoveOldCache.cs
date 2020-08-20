@@ -32,8 +32,7 @@ namespace ImageResizer
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
-                
-               int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
+                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
               
                 
 
@@ -42,7 +41,7 @@ namespace ImageResizer
 
                 if (!flag)
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.InternalServerError, "Something went wrong not all files could be deleted");
+                        HttpStatusCode.InternalServerError, "Something went wrong, not all files could be deleted");
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.OK, "Old Cache was successfully removed");

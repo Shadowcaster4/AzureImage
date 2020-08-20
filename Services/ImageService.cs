@@ -29,8 +29,7 @@ namespace ImageResizer.Services
     public class ImageService : BaseService, IImageService
     {
         private readonly BlobServiceClient _blobServiceClient;
-        //private BlobContainerClient blobContainerClient;
-        //private BlobBaseClient blobBaseClient;
+        
         public ImageService(string applicationConnectionString) : base(applicationConnectionString)
         {
             _blobServiceClient = new BlobServiceClient(applicationConnectionString);            
@@ -56,11 +55,7 @@ namespace ImageResizer.Services
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
-            if (_blobServiceClient.GetBlobContainerClient(container.GetContainerName()).Exists())
-            {
-                return true;
-            }
-            return false;
+            return _blobServiceClient.GetBlobContainerClient(container.GetContainerName()).Exists();
         }
       
         public List<string> GetBlobContainers()
@@ -70,12 +65,10 @@ namespace ImageResizer.Services
 
         public bool DeleteClientContainer(IContainerService container)
         {
-            if (CheckIfContainerExists(container))
-            {
-                _blobServiceClient.DeleteBlobContainer(container.GetContainerName());
-                return true;
-            }
-            return false;
+            if (!CheckIfContainerExists(container)) return false;
+
+            _blobServiceClient.DeleteBlobContainer(container.GetContainerName());
+            return true;
         }
 
         public bool CreateClientContainer(IContainerService clientContainer)
@@ -94,18 +87,18 @@ namespace ImageResizer.Services
             return GetServiceContainer(container).GetBlobBaseClient(imagePath).Exists();
         }
 
-        public BlobBaseClient GetBlobImage(string imagePath, IContainerService container)
+        private BlobBaseClient GetBlobImage(string imagePath, IContainerService container)
         {
             return GetServiceContainer(container).GetBlobBaseClient(imagePath);
-            //return new BlobBaseClient(_applicationConnectionString,container.GetContainerName(),imagePath);
+           
         }
-    
-        public Azure.Pageable<BlobItem> GetImagesFromContainer(IContainerService clientContainer)
+
+        private Azure.Pageable<BlobItem> GetImagesFromContainer(IContainerService clientContainer)
         {
             try
             {
                 if (!CheckIfContainerExists(clientContainer))
-                    throw new Exception("Blob container is not set");
+                    throw new Exception("Blob container doesn't exist");
                 return GetServiceContainer(clientContainer).GetBlobs();
             }
             catch (Exception e)
@@ -124,12 +117,10 @@ namespace ImageResizer.Services
 
         public bool DeleteSingleCacheImage(string cacheImagePath, IContainerService container)
         {
-            if (CheckIfImageExists(cacheImagePath,container))
-            {
-                GetBlobImage(cacheImagePath, container).Delete();
-                return true;
-            }
-            return false;
+            if (!CheckIfImageExists(cacheImagePath, container))
+                return false;
+            GetBlobImage(cacheImagePath, container).Delete();
+            return true;
         }
 
         public bool DeleteImageDirectory(string baseImageName, IContainerService container)
@@ -162,7 +153,7 @@ namespace ImageResizer.Services
             return flag;
         }
 
-        public ImageData GetImageProperties(Stream imageStream, string imageName, string container)
+        private ImageData GetImageProperties(Stream imageStream, string imageName, string container)
         {
             imageStream.Position = 0;
             Size imageSize = GetFileResolution.GetDimensions(new BinaryReader(imageStream));
@@ -206,11 +197,17 @@ namespace ImageResizer.Services
         }
 
         public string GetImagePathResize(QueryParameterValues parameters, string fileName)
-        {            
-            if(parameters.WatermarkPresence)
-                return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark" + "/" + fileName;
+        {
+            if (parameters.WatermarkPresence)
+                return Path.Combine(fileName[0].ToString(),
+                    fileName.Replace(".", ""),
+                    parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "-" + "watermark",
+                    fileName);
 
-            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + parameters.Width + "-" + parameters.Height + "-" + parameters.Padding + "/" + fileName;
+            return Path.Combine(fileName[0].ToString(),
+                fileName.Replace(".", ""),
+                parameters.Width + "-" + parameters.Height + "-" + parameters.Padding,
+                fileName);
         }
 
         public string GetImagePathUpload(string fileName)

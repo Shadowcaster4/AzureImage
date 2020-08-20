@@ -163,7 +163,7 @@ namespace ImageResizer.Services
 
         public ImageData GetImageProperties(IImageService service, string imageName, IContainerService container)
         {
-            var openImage = service.DownloadHeadOfImageFromStorageToStream(
+            var openImage = service.DownloadImageFromStorageToStream(
                 service.GetImagePathUpload(imageName),
                 container);
             openImage.Position = 0;
