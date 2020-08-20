@@ -48,6 +48,11 @@ namespace ImageResizer.Utilities
 
         }
 
+        public static string GetStorageConnectionString()
+        {
+            return _config.GetSection("LocalStorageConnectionString").Value;
+        }
+
         public static IDatabaseService GetDatabaseService(string dbConnString="",bool initialize=true)
         {
             if (dbConnString.IsNullOrEmpty())

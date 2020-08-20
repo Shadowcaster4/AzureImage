@@ -269,8 +269,7 @@ namespace ImageResizer.Services.Interfaces
 
         public bool RemoveOldCache(IContainerService container, int days)
         {
-            //var contariner = container
-            //pelna sciezka wa nie file name tylko
+            
             Dictionary<string, DateTime> cacheImagesDictionary = GetCachedImagesDictionary(container);
             bool flag = true;
             var removeDay = DateTime.UtcNow.AddDays(days * -1);
@@ -281,8 +280,8 @@ namespace ImageResizer.Services.Interfaces
                 {
                     FileInfo tmpFileInfo = new FileInfo(item.Key);
                     tmpFileInfo.Directory.Delete(true);
-                    if (tmpFileInfo.Directory.Parent.GetFiles().IsEmpty())
-                        tmpFileInfo.Directory.Parent.Delete();
+                    if (tmpFileInfo.Directory.Parent.GetDirectories().IsEmpty())
+                        tmpFileInfo.Directory.Parent.Delete(true);
                 }
             }
 
