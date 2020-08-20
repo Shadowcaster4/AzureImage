@@ -212,13 +212,13 @@ namespace ImageResizer.Services
 
         public string GetImagePathUpload(string fileName)
         {
-            return fileName[0] + "/" + fileName.Replace(".", "") + "/" + fileName;
+            return Path.Combine(fileName[0].ToString(), fileName.Replace(".", ""), fileName);
         }
 
         public Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container)
         {
             if (!CheckIfContainerExists(container))
-                throw new Exception("Blob container is not set");
+                throw new Exception("Blob container doesn't exist");
             var blobs = GetServiceContainer(container)
                 .GetBlobs().Where(x=>x.Name.Count(element=>element=='/')==2);
 
@@ -234,7 +234,7 @@ namespace ImageResizer.Services
         public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
         {
             if (!CheckIfContainerExists(container))
-                throw new Exception("Blob container is not set");
+                throw new Exception("Blob container doesn't exist");
             var blobs = GetServiceContainer(container)
                 .GetBlobs().Where(x => x.Name.Count(element => element == '/') > 2);
             var cachedImagesDictionary = new Dictionary<string, DateTime>();
@@ -270,7 +270,6 @@ namespace ImageResizer.Services
         {
             MemoryStream outputStream = new MemoryStream();
             GetBlobImage(imagePath,container).DownloadTo(outputStream);
-            
             return outputStream;
         }
 
