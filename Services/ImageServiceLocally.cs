@@ -281,7 +281,7 @@ namespace ImageResizer.Services.Interfaces
                 {
                     FileInfo tmpFileInfo = new FileInfo(item.Key);
                     tmpFileInfo.Directory.Delete(true);
-                    if (!tmpFileInfo.Directory.Parent.GetFiles().Any())
+                    if (tmpFileInfo.Directory.Parent.GetFiles().IsEmpty())
                         tmpFileInfo.Directory.Parent.Delete();
                 }
             }
