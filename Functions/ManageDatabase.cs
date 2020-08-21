@@ -22,9 +22,9 @@ namespace ImageResizer.Functions
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "ManageDatabase/{container}/{secKey}")] HttpRequest req,
             string container,
-            string secKey,
-            ILogger log)
+            string secKey)
         {
+            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -51,7 +51,7 @@ namespace ImageResizer.Functions
             }
             catch (Exception e)
             {
-                log.LogInformation(e.Message);
+                log.Error(e.Message);
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.InternalServerError, "");
             }

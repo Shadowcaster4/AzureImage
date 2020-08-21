@@ -26,11 +26,12 @@ namespace ImageResizer
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Resize/{parameters}/{container}/{imagename}")] HttpRequest req,
             string parameters,
             string container,
-            string imagename,
-            ILogger log)
+            string imagename)
         {
+            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             try
             {
+                log.Info("Resize AF");
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
 
@@ -127,7 +128,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.LogInformation(e.Message);
+                log.Error(e.Message);
                
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.BadRequest, "Something gone wrong");

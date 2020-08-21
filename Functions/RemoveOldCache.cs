@@ -19,9 +19,9 @@ namespace ImageResizer
         [FunctionName("RemoveOldCache")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "RemoveOldCache/{container}")] HttpRequest req,
-            string container,
-            ILogger log)
+            string container)
         {
+            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -49,7 +49,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.LogInformation(e.Message);
+                log.Error(e.Message);
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.InternalServerError, "");
             }

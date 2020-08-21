@@ -24,10 +24,9 @@ namespace ImageResizer
         
         [FunctionName("Remove")]
         public static async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req)
         {
-            
+            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             try
             {
 
@@ -135,7 +134,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.LogInformation(e.Message);
+                log.Error(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
            

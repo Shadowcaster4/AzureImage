@@ -21,10 +21,9 @@ namespace ImageResizer
              
         [FunctionName("Upload")]
         public static async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Upload")] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "Upload")] HttpRequest req)
         {
-          
+            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
             try
             {
                 if(!req.Form.Files.Any() || req.Form["container"] == string.Empty)
@@ -94,7 +93,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.LogInformation(e.Message);
+                log.Error(e.Message);
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.InternalServerError, "Something gone wrong");
             }

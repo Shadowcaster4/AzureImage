@@ -14,7 +14,7 @@ using ServiceStack;
 
 namespace ImageResizer.Utilities
 {
-    public static  class Utilities
+    public static class Utilities
     {
         private static readonly string xfff = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "AppConfig.json");
         private static readonly IConfigurationRoot _config = new ConfigurationBuilder()

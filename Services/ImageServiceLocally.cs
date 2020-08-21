@@ -132,6 +132,7 @@ namespace ImageResizer.Services.Interfaces
             {
                 string directoryPath =Path.Combine(fileToDelete.DirectoryName,fileToDelete.Name.Replace(".",""));
                 fileToDelete.Delete();
+                if(Directory.Exists(directoryPath))
                 Directory.Delete(directoryPath, true);
                 return true;
             }
