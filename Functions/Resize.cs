@@ -19,8 +19,9 @@ namespace ImageResizer
 {
 
     public static class Resize
-    {               
-   
+    {
+
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         [FunctionName("Resize")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Resize/{parameters}/{container}/{imagename}")] HttpRequest req,
@@ -28,10 +29,10 @@ namespace ImageResizer
             string container,
             string imagename)
         {
-            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+           
             try
             {
-                log.Info("Resize AF");
+                Log.Info("Resize AF");
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
 
@@ -128,7 +129,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                Log.Error(e.Message);
                
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.BadRequest, "Something gone wrong");

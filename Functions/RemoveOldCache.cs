@@ -15,13 +15,14 @@ namespace ImageResizer
 {
     public static class RemoveOldCache
     {
-        
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         [FunctionName("RemoveOldCache")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "RemoveOldCache/{container}")] HttpRequest req,
             string container)
         {
-            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+       
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -32,11 +33,11 @@ namespace ImageResizer
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                         HttpStatusCode.BadRequest, "Provided container is invalid");
                 }
-                int DaysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
+                int daysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
               
                 
 
-                bool flag = service.RemoveOldCache(containerService, DaysAfterImageCacheWillBeDeleted);
+                bool flag = service.RemoveOldCache(containerService, daysAfterImageCacheWillBeDeleted);
 
 
                 if (!flag)
@@ -49,7 +50,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                Log.Error(e.Message);
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.InternalServerError, "");
             }

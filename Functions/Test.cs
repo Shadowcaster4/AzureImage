@@ -34,14 +34,14 @@ namespace ImageResizer.Functions
     public class Test
     {
 
-       
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 
         [FunctionName("Test")]
         public  async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
-            ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            
 
            // TelemetryConfiguration.Active.InstrumentationKey = "";
 
@@ -49,7 +49,7 @@ namespace ImageResizer.Functions
            // XmlConfigurator.Configure(logRepository,
             //    new FileInfo(Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"log4net.config")));
             
-            log.Debug("dajesz2");
+            Log.Debug("dajesz2");
             //new Microsoft.ApplicationInsights.TelemetryClient().Flush();
 
             return new OkObjectResult("xD");

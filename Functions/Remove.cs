@@ -21,12 +21,13 @@ namespace ImageResizer
 {
     public static class Remove
     {
-        
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         [FunctionName("Remove")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Remove")] HttpRequest req)
         {
-            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+          
             try
             {
 
@@ -134,7 +135,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                Log.Error(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
            

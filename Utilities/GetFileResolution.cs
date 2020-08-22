@@ -13,6 +13,7 @@ namespace ImageResizer.Functions
     public class GetFileResolution
     {
         private const string ErrorMessage = "Could not recognise image format.";
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly Dictionary<byte[], Func<BinaryReader, Size>> ImageFormatDecoders = new Dictionary<byte[], Func<BinaryReader, Size>>()
         {
@@ -24,6 +25,7 @@ namespace ImageResizer.Functions
 
         public static Size GetDimensions(BinaryReader binaryReader)
         {
+
             int maxMagicBytesLength = ImageFormatDecoders.Keys.OrderByDescending(x => x.Length).First().Length;
             byte[] magicBytes = new byte[maxMagicBytesLength];
             for (int i = 0; i < maxMagicBytesLength; i += 1)

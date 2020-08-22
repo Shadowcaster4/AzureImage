@@ -19,13 +19,17 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace ImageResizer.Functions
 {
+
     public static class GetAllStorageContainers
     {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
         [FunctionName("GetAllStorageContainers")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetAllStorageContainers")] HttpRequest req)
         {
-            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+         
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -41,7 +45,7 @@ namespace ImageResizer.Functions
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                Log.Error(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
            

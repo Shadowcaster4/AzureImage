@@ -17,13 +17,14 @@ namespace ImageResizer
 {
     public static class GetClientContainerSize
     {
-       
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         [FunctionName("GetClientContainerSize")]
         public static async Task<HttpResponseMessage> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetClientContainerSize/{container}")] HttpRequest req,
             string container)
         {
-            var log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+           
             try
             {
                 IImageService service = Utilities.Utilities.GetImageService();
@@ -41,7 +42,7 @@ namespace ImageResizer
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                Log.Error(e.Message);
                 return new HttpResponseMessage(HttpStatusCode.InternalServerError);
             }
                        

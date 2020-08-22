@@ -308,17 +308,21 @@ namespace ImageResizer.Services.Interfaces
             using (var fs = File.Open(GetFullFilePath(container, imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                
-                if (Path.GetFileName(imagePath).EndsWith(".gif") || Path.GetFileName(imagePath).EndsWith(".png"))
+              /*  if (Path.GetFileName(imagePath).EndsWith(".gif") || Path.GetFileName(imagePath).EndsWith(".png"))
                 {
-                    byte[] bytes = new byte[2048];
-                    fs.Read(bytes, 0, 2048);
+                    byte[] bytes = new byte[24];
+                    fs.Read(bytes, 0, 24);
                     outputStream = new MemoryStream(bytes);
                 }
                 else
                 {
-                    fs.CopyTo(outputStream);
-                }
-              
+                   
+                }*/
+
+                byte[] bytes = new byte[40000];
+                fs.Read(bytes, 0, 40000);
+                outputStream = new MemoryStream(bytes);
+
                 fs.Dispose();
             }
             return outputStream;
