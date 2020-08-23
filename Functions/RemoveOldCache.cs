@@ -37,12 +37,8 @@ namespace ImageResizer
               
                 
 
-                bool flag = service.RemoveOldCache(containerService, daysAfterImageCacheWillBeDeleted);
-
-
-                if (!flag)
-                    return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.InternalServerError, "Something went wrong, not all files could be deleted");
+                service.RemoveOldCache(containerService, daysAfterImageCacheWillBeDeleted);
+                
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.OK, "Old Cache was successfully removed");

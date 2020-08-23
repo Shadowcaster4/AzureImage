@@ -229,7 +229,7 @@ namespace ImageResizer.Services.Interfaces
             return myBaseImagesDictionary.ToDictionary(x => Path.GetFileName(x.Key), x => new CloudFileInfo(x.Value.Size, x.Value.Date));
         }
 
-        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
+        public Dictionary<string, DateTime> GetCacheImagesDictionary(IContainerService container)
         {
             Dictionary<string, LocalFileInfo> cachedImages = new Dictionary<string, LocalFileInfo>();
             var containerClient = GetServiceContainer(container);
@@ -238,13 +238,8 @@ namespace ImageResizer.Services.Interfaces
             return cachedImages.ToDictionary(x =>x.Key, x => x.Value.Date);
         }
 
-        private string FindLetterPath(string path)
-        {
-            return String.Join(@"\", path.Split('\\').Skip(3));
-        }
 
-
-        public Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int depth)
+        private Dictionary<string, LocalFileInfo> GetLocalFiles(Dictionary<string, LocalFileInfo> myFiles, string startLocation, int depth)
         {
             string[] subDirs = Directory.GetDirectories(startLocation);
 
@@ -268,12 +263,11 @@ namespace ImageResizer.Services.Interfaces
         }
 
 
-        public bool RemoveOldCache(IContainerService container, int days)
+        public void RemoveOldCache(IContainerService container, int days)
         {
             
-            Dictionary<string, DateTime> cacheImagesDictionary = GetCachedImagesDictionary(container);
-            bool flag = true;
-            var removeDay = DateTime.UtcNow.AddDays(days * -1);
+            Dictionary<string, DateTime> cacheImagesDictionary = GetCacheImagesDictionary(container);
+            DateTime removeDay = DateTime.UtcNow.AddDays(days * -1);
 
             foreach (var item in cacheImagesDictionary)
             {
@@ -286,7 +280,7 @@ namespace ImageResizer.Services.Interfaces
                 }
             }
 
-            return flag;
+           
         }
 
         #endregion

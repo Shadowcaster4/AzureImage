@@ -231,7 +231,7 @@ namespace ImageResizer.Services
             return baseImagesDictionary;
         }
 
-        public Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container)
+        public Dictionary<string, DateTime> GetCacheImagesDictionary(IContainerService container)
         {
             if (!CheckIfContainerExists(container))
                 throw new Exception("Blob container doesn't exist");
@@ -249,7 +249,7 @@ namespace ImageResizer.Services
 
         public bool RemoveOldCache(IContainerService container, int days)
         {
-            var cachedImagesDictionary = GetCachedImagesDictionary(container);
+            var cachedImagesDictionary = GetCacheImagesDictionary(container);
             bool flag = true;
 
             foreach (var item in cachedImagesDictionary)

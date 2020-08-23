@@ -34,13 +34,13 @@ namespace ImageResizer.Services.Interfaces
         IImageEncoder GetImageEncoder(string fileFormat);
         Dictionary<string, long> GetImagesDictionaryPathAndSize(IContainerService container);
         Dictionary<string, CloudFileInfo> GetBaseImagesDictionary(IContainerService container);
-        Dictionary<string, DateTime> GetCachedImagesDictionary(IContainerService container);
+        Dictionary<string, DateTime> GetCacheImagesDictionary(IContainerService container);
         MemoryStream MutateImage(MemoryStream imageFromStorage, IContainerService container, int width, int height, bool padding, string fileFormat, bool watermark);
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
     
         ImageData UploadImage(Stream imageStream, IContainerService container, string imagePath);
         MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container);
-        bool RemoveOldCache(IContainerService container, int days);
+        void RemoveOldCache(IContainerService container, int days);
 
     }
 }
