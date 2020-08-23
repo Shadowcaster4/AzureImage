@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ using System.Linq;
 using Azure;
 using Azure.Storage.Blobs.Models;
 using System.Security.Cryptography.X509Certificates;
+using ImageResizer.Entities;
 
 namespace ImageResizer.Functions
 {
@@ -34,13 +36,13 @@ namespace ImageResizer.Functions
             {
                 IImageService service = Utilities.Utilities.GetImageService();
 
-                var containers = service.GetBlobContainers();
+                List<string> containers = service.GetBlobContainers();
                
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new
-                    {
-                        ContainersNames = containers
-                    }));
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(
+                        containers
+                    
+                    ));
 
             }
             catch (Exception e)

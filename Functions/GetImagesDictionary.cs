@@ -39,7 +39,7 @@ namespace ImageResizer
                 var cloudImages = service.GetBaseImagesDictionary(containerService);
               
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: cloudImages));
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(cloudImages));
             }
             catch (Exception e)
             {

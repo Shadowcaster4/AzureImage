@@ -63,11 +63,6 @@ namespace ImageResizer
                             return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                                 HttpStatusCode.OK, "Client container is gone");
                         }
-                        else
-                        {
-                            return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                                HttpStatusCode.NotFound, "Client container doesn't exist");
-                        }                           
                         break;
 
                     case "imageDirectory":

@@ -39,7 +39,7 @@ namespace ImageResizer.Services.Interfaces
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
-            return Directory.Exists(Path.Combine(_serviceClient.FullName,container.GetContainerName()));
+            return !container.GetContainerName().IsNullOrEmpty() && Directory.Exists(Path.Combine(_serviceClient.FullName,container.GetContainerName()));
         }
         
         private string GetFullFilePath(IContainerService container, string filePath)

@@ -34,7 +34,7 @@ namespace ImageResizer.Functions
 
                 if (service.GetImageSecurityHash(containerService.GetContainerName(), Utilities.Utilities.ContainerRemoveKey) != secKey)
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.NotFound, "Provided secKey is invalid");
+                        HttpStatusCode.NotFound, "Provided SecKey is invalid");
 
 
                 if (!service.CheckIfContainerExists(containerService))

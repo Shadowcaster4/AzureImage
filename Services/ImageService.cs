@@ -247,19 +247,19 @@ namespace ImageResizer.Services
             return cachedImagesDictionary;
         }
 
-        public bool RemoveOldCache(IContainerService container, int days)
+        public void RemoveOldCache(IContainerService container, int days)
         {
             var cachedImagesDictionary = GetCacheImagesDictionary(container);
-            bool flag = true;
+           
 
             foreach (var item in cachedImagesDictionary)
             {
                 if (item.Value < DateTime.UtcNow.AddDays(days * -1))
-                    if (!DeleteSingleCacheImage(item.Key, container))
-                        flag = false;
+                    DeleteSingleCacheImage(item.Key, container);
+
             }
 
-            return flag;
+         
         }
 
         #endregion

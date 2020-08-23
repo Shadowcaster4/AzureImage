@@ -6,12 +6,14 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using ImageResizer.Entities;
+using ServiceStack;
 
 namespace ImageResizer
 {
@@ -36,9 +38,12 @@ namespace ImageResizer
                 }
 
                 double containerSizeInMiB = Math.Round(service.GetImagesDictionaryPathAndSize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
-              
+
+                var xyz = new Dictionary<string,double>();
+                xyz.Add(containerService.GetContainerName(),containerSizeInMiB);
+
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, JsonConvert.SerializeObject(value: new { ContainerName = containerService.GetContainerName(), ContainerSizeMiB = containerSizeInMiB }));
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(xyz));
             }
             catch (Exception e)
             {
