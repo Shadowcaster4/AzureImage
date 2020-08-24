@@ -168,7 +168,7 @@ namespace ImageResizer.Services
                 container);
             openImage.Position = 0;
 
-            var (width, height) = GetFileResolution.GetDimensions(new BinaryReader(openImage));
+            var (width, height) =  GetFileResolution.GetDimensions(new BinaryReader(openImage));
 
             var imageData = new ImageData
             {
