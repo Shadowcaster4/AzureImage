@@ -32,7 +32,7 @@ namespace ImageResizer
            
             try
             {
-                Log.Info("Resize AF");
+                Log.Info("Resize");
                 IImageService service = Utilities.Utilities.GetImageService();
                 IContainerService containerService = new ContainerClass(container);
 

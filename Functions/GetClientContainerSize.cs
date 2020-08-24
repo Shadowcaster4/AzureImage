@@ -39,11 +39,11 @@ namespace ImageResizer
 
                 double containerSizeInMiB = Math.Round(service.GetImagesDictionaryPathAndSize(containerService).Sum(x => x.Value) / (1024f * 1024f), 2);
 
-                var xyz = new Dictionary<string,double>();
-                xyz.Add(containerService.GetContainerName(),containerSizeInMiB);
+                var sizeDictionary = new Dictionary<string,double>();
+                sizeDictionary.Add(containerService.GetContainerName(),containerSizeInMiB);
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                    HttpStatusCode.OK, JsonConvert.SerializeObject(xyz));
+                    HttpStatusCode.OK, JsonConvert.SerializeObject(sizeDictionary));
             }
             catch (Exception e)
             {

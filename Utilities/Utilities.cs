@@ -19,8 +19,7 @@ namespace ImageResizer.Utilities
         private static readonly string xfff = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "AppConfig.json");
         private static readonly IConfigurationRoot _config = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"Utilities\AppConfig.json")).Build();
-            //.AddJsonFile(@"C:\Users\Tanatos\source\repos\ImageResizer\Utilities\AppConfig.json").Build();
-
+          
         public static readonly string ContainerRemoveKey = _config.GetSection("ContainerRemoveKey").Value;
         public static readonly int DaysAfterImageCacheWillBeDeleted = Int32.Parse(_config.GetSection("DaysAfterImageCacheWillBeDeleted").Value);
 
