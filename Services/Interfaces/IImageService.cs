@@ -1,13 +1,8 @@
-﻿using Azure;
-using Azure.Storage.Blobs.Models;
-using ImageResizer.Entities;
+﻿using ImageResizer.Entities;
 using SixLabors.ImageSharp.Formats;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
-using ImageResizer.Database;
-using System.Configuration;
 
 namespace ImageResizer.Services.Interfaces
 {
@@ -39,7 +34,6 @@ namespace ImageResizer.Services.Interfaces
         bool SaveImage(MemoryStream imageToSave, string imagePath, IContainerService container);
     
         ImageData UploadImage(Stream imageStream, IContainerService container, string imagePath);
-        MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container);
         void RemoveOldCache(IContainerService container, int days);
 
     }

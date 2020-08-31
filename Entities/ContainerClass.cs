@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using ImageResizer.Services.Interfaces;
-using ServiceStack;
 
 namespace ImageResizer.Entities
 { 

@@ -43,9 +43,6 @@ namespace ImageResizer.Services
             if (CheckIfDbFileExist(DbConnString))
             {
                 DbConnection = SetDbConnection(DbConnString);
-                //service = Utilities.Utilities.GetImageService();
-            //    RestoreData(service);
-            //    CheckAndCorrectDbData(service);
             }
             else
             {
@@ -197,11 +194,7 @@ namespace ImageResizer.Services
                 return DbConnection.Open().Count<ImageData>();
             }
         }
-
-
-
-
-
+        
 
         public void RestoreData(IImageService imageService)
         {
@@ -209,7 +202,6 @@ namespace ImageResizer.Services
 
             Parallel.ForEach(imageService.GetBlobContainers(),
                 container => { RestoreDataForContainer(imageService, new ContainerClass(container)); });
-
         }
         
         public void RestoreDataForContainer(IImageService imageService, IContainerService container)

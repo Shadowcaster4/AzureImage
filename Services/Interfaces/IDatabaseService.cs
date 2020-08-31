@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using ImageResizer.Services.Interfaces;
-using System.Data;
 using ImageResizer.Entities;
 
 namespace ImageResizer.Database

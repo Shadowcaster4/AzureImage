@@ -1,15 +1,12 @@
-using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ImageResizer.Entities;
-using SixLabors.ImageSharp.Drawing;
 
 namespace ImageResizer
 {
@@ -35,12 +32,8 @@ namespace ImageResizer
                 }
 
                 int daysAfterImageCacheWillBeDeleted = Utilities.Utilities.DaysAfterImageCacheWillBeDeleted;
-                // int daysAfterImageCacheWillBeDeleted = Int32.Parse(Environment.GetEnvironmentVariable("DaysAfterImageCacheWillBeDeleted"));
-              
-                
-
+           
                 service.RemoveOldCache(containerService, daysAfterImageCacheWillBeDeleted);
-                
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
                     HttpStatusCode.OK, "Old Cache was successfully removed");
@@ -53,8 +46,6 @@ namespace ImageResizer
                     HttpStatusCode.InternalServerError, "");
             }
          
-            
-            
         }
     }
 }

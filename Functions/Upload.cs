@@ -3,7 +3,6 @@ using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -84,7 +83,7 @@ namespace ImageResizer
 
                 if (notUploadedFiles.Any())
                     return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(
-                        HttpStatusCode.MultiStatus, JsonConvert.SerializeObject(value: notUploadedFiles));
+                        HttpStatusCode.MultiStatus, JsonConvert.SerializeObject(notUploadedFiles));
                 
 
                 return Utilities.Utilities.GetHttpResponseMessage_ReturnsStatusCodeAndMessage(

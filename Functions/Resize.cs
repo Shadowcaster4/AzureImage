@@ -1,18 +1,12 @@
 using ImageResizer.Database;
 using ImageResizer.Entities;
-using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Data;
-using System.Data.SQLite;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace ImageResizer
@@ -59,36 +53,36 @@ namespace ImageResizer
                         HttpStatusCode.NotFound, "Requested image doesn't exists");
                 }
 
-                //checks if watermark imagename exist if not watermark presence parameter is set to false
+                //check if watermark  exist if not watermark presence parameter will be set to false
                 if (!service.CheckIfImageExists(service.GetImagePathUpload("watermark.png"), containerService))
                     requestedParameters.SetWatermarkPresence(false);
 
-                //checks if hash from parameter is valid for requested picture
+                //check if hash from parameter is valid for requested picture
                 else if (service.GetImageSecurityHash(container, imagename).Substring(0, 4) == requestedParameters.WatermarkString)
                     requestedParameters.SetWatermarkPresence(false);
 
-                //sets imagename extension variable
+                //set extension variable
                 var imageExtension = service.GetImageExtension(imagename);
                 var imagePath = service.GetImagePathResize(requestedParameters, imagename);
 
-                //checks if requested resolution is valid - oryginal imagename resolution is >= requested resolution
+                //check if requested resolution is valid - original image resolution is >= requested resolution
                 IDatabaseService databaseService = Utilities.Utilities.GetDatabaseService();
                 var imageData = databaseService.GetImageData(imagename, containerService);
                
-                var flagIsInOryginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(
+                var flagIsInOriginalImageRange = service.CheckIfImageRequestedImageResolutionIsInRange(
                     requestedParameters.Width, 
                     requestedParameters.Height, 
                     imageData);
 
-                //if requested imagename resolution is out of range and requested imagename doesn't contain watermark then it will return imagename from original imagename stream
-                if (!flagIsInOryginalImageRange)
+                //if requested image resolution is out of range and requested image doesn't contain watermark then it will return image from original image stream
+                if (!flagIsInOriginalImageRange)
                 {
                     if(!requestedParameters.WatermarkPresence)
                     {
                         var tmpImg = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imagename),containerService);
                         return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, imagename, imageExtension);
                     }
-                    //if watermark will be used then new imagename will be created and saved in location created from "0,0" parameters
+                    //if watermark will be used then new image will be created and saved in location created with "0,0" parameters
                     string newParametersValues = "0,0";
                     var oversizeImageParameters = new QueryParameterValues(newParametersValues);
                     requestedParameters = oversizeImageParameters;
@@ -102,12 +96,12 @@ namespace ImageResizer
                     return Utilities.Utilities.GetImageHttpResponseMessage(tmpImg, imagename, imageExtension);
                 }
 
-                //this part creates new resized imagename
+                //this part creates new resized image
                 if(service.CheckIfImageExists(service.GetImagePathUpload(imagename),containerService))
                 {  
-                    //download base imagename from storage
+                    //download base image from storage
                     var imageFromStorage = service.DownloadImageFromStorageToStream(service.GetImagePathUpload(imagename),containerService);
-                    //create new imagename with requested parameters
+                    //create new image with requested parameters
                     var mutatedImage = service.MutateImage(
                         imageFromStorage,
                         containerService,
@@ -116,7 +110,7 @@ namespace ImageResizer
                         requestedParameters.Padding,
                         imageExtension,
                         requestedParameters.WatermarkPresence);
-                    //save created imagename
+                    //save created image
                     service.SaveImage(mutatedImage, imagePath,containerService);
 
                     return Utilities.Utilities.GetImageHttpResponseMessage(mutatedImage, imagename, imageExtension);

@@ -1,7 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using Dapper;
 using ImageResizer.Entities;
 using ImageResizer.Services.Interfaces;
 using SixLabors.ImageSharp;
@@ -13,16 +12,12 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ImageResizer.Database;
 using ImageResizer.Functions;
-using System.Configuration;
 
 namespace ImageResizer.Services
 {
@@ -49,7 +44,7 @@ namespace ImageResizer.Services
             {
                 return _blobServiceClient.GetBlobContainerClient(container.GetContainerName());
             }
-            throw new Exception("container doesnt exists");
+            throw new Exception("container doesn't exists");
         }
 
         #region Containers Methods
@@ -184,11 +179,6 @@ namespace ImageResizer.Services
             
             imageStream.Dispose();
             return imageData;
-        }
-
-        public MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container)
-        {
-            throw new NotImplementedException();
         }
 
         public bool CheckIfImageRequestedImageResolutionIsInRange(int width, int height, ImageData imageData)

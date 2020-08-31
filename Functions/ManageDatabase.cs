@@ -1,18 +1,13 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ImageResizer.Database;
 using ImageResizer.Entities;
-using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace ImageResizer.Functions
 {

@@ -1,7 +1,4 @@
 ﻿using ServiceStack.DataAnnotations;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using ServiceStack.Model;
 
 namespace ImageResizer.Entities

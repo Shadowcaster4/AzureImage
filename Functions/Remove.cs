@@ -1,20 +1,13 @@
-using Dapper;
 using ImageResizer.Database;
 using ImageResizer.Entities;
-using ImageResizer.Services;
 using ImageResizer.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Data;
-using System.Data.SQLite;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ImageResizer.Utilities;
 using ServiceStack;
 
 namespace ImageResizer

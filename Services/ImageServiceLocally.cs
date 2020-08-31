@@ -1,5 +1,4 @@
-﻿using Dapper;
-using ImageResizer.Entities;
+﻿using ImageResizer.Entities;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Gif;
@@ -9,13 +8,11 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ImageResizer.Database;
 using ImageResizer.Functions;
 using ServiceStack;
 
@@ -39,7 +36,9 @@ namespace ImageResizer.Services.Interfaces
         #region Containers Methods
         public bool CheckIfContainerExists(IContainerService container)
         {
-            return !container.GetContainerName().IsNullOrEmpty() && Directory.Exists(Path.Combine(_serviceClient.FullName,container.GetContainerName()));
+            return !container.GetContainerName().IsNullOrEmpty() &&
+                   Directory.Exists(
+                       Path.Combine(_serviceClient.FullName,container.GetContainerName()));
         }
         
         private string GetFullFilePath(IContainerService container, string filePath)
@@ -279,8 +278,6 @@ namespace ImageResizer.Services.Interfaces
                         tmpFileInfo.Directory.Parent.Delete(true);
                 }
             }
-
-           
         }
 
         #endregion
@@ -296,30 +293,7 @@ namespace ImageResizer.Services.Interfaces
             return outputStream;
         }
 
-        public MemoryStream DownloadHeadOfImageFromStorageToStream(string imagePath, IContainerService container)
-        {
-            MemoryStream outputStream = new MemoryStream();
-            using (var fs = File.Open(GetFullFilePath(container, imagePath), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-               
-                if (Path.GetFileName(imagePath).EndsWith(".gif") || Path.GetFileName(imagePath).EndsWith(".png"))
-                {
-                    byte[] bytes = new byte[24];
-                    fs.Read(bytes, 0, 24);
-                    outputStream = new MemoryStream(bytes);
-                }
-                else
-                {
-                    byte[] bytes = new byte[200];
-                    fs.Read(bytes, 0, 200);
-                    outputStream = new MemoryStream(bytes);
-                }
-
-                fs.Dispose();
-            }
-            return outputStream;
-        }
-
+    
 
         public IImageEncoder GetImageEncoder(string fileFormat)
         {
